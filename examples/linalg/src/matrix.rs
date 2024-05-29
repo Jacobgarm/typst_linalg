@@ -85,14 +85,14 @@ impl Matrix {
         self.rows[0].len()
     }
 
-    fn rowswap(&self, r1: usize, r2: usize) -> Matrix {
+    pub fn rowswap(&self, r1: usize, r2: usize) -> Matrix {
         assert!(r1 + r2 < 2 * self.nrows());
         let mut out = self.clone();
         out.rows.swap(r1, r2);
         out
     }
 
-    fn rowscale(&self, row: usize, c: f64) -> Matrix {
+    pub fn rowscale(&self, row: usize, c: f64) -> Matrix {
         let mut out = self.clone();
         out.rows[row] = out.rows[row].iter()
         .map(|entry| entry * c)
@@ -100,7 +100,7 @@ impl Matrix {
         out
     }
 
-    fn rowadd(&self, r1: usize, r2: usize, c: f64) -> Matrix {
+    pub fn rowadd(&self, r1: usize, r2: usize, c: f64) -> Matrix {
         let mut out = self.clone();
         for i in 0..self.ncols() {
             out.rows[r1][i] += c * out.rows[r2][i];
