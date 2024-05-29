@@ -11,7 +11,7 @@ impl std::ops::Add for Matrix {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-                out.rows[i][j] += rhs.rows[i][j];
+                out[i][j] += rhs[i][j];
             }
         }
         out
@@ -24,7 +24,7 @@ impl std::ops::Neg for Matrix {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-                out.rows[i][j] *= -1.0;
+                out[i][j] *= -1.0;
             }
         }
         out
@@ -37,7 +37,7 @@ impl std::ops::Sub for Matrix {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-                out.rows[i][j] -= rhs.rows[i][j];
+                out[i][j] -= rhs[i][j];
             }
         }
         out
@@ -51,11 +51,25 @@ impl std::ops::Mul for Matrix {
         for i in 0..self.nrows() {
             for j in 0..rhs.ncols() {
                 for k in 0..rhs.nrows() {
-                    out.rows[i][j] += self.rows[i][k] * rhs.rows[k][j];
+                    out[i][j] += self[i][k] * rhs[k][j];
                 }
             }
         }
         out
+    }
+}
+
+impl std::ops::Index<usize> for Matrix {
+    type Output = Vec<f64>;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.rows[index]
+    }
+}
+
+impl std::ops::IndexMut<usize> for Matrix {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.rows[index]
     }
 }
 
@@ -72,7 +86,7 @@ impl Matrix {
     fn id(dim: usize) -> Self {
         let mut out = Matrix::zero(dim, dim);
         for i in 0..dim {
-            out.rows[i][i] = 1.0;
+            out[i][i] = 1.0;
         }
         out
     }
@@ -83,6 +97,16 @@ impl Matrix {
 
     fn ncols(&self) -> usize {
         self.rows[0].len()
+    }
+
+    fn transpose(&self) -> Self {
+        let mut out = Matrix::zero(self.ncols(), self.nrows());
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                out[j][i] = self[i][j];
+            }
+        }
+        out
     }
 
     pub fn rowswap(&self, r1: usize, r2: usize) -> Matrix {
