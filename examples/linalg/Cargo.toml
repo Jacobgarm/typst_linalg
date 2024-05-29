@@ -3,7 +3,12 @@ name = "linalg"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "linalg-bin"
+path = "src/main.rs"
+
 [lib]
+name = "linalg"
 crate-type = ["cdylib"]
 
 [dependencies]
