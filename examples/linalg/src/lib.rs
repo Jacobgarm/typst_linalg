@@ -1,6 +1,7 @@
 use wasm_minimal_protocol::*;
 
 mod matrix;
+mod vector;
 use matrix::*;
 
 initiate_protocol!();
