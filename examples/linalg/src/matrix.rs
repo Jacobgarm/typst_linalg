@@ -69,12 +69,43 @@ impl Matrix {
         Matrix { rows: out }
     }
 
+    fn id(dim: usize) -> Self {
+        let mut out = Matrix::zero(dim, dim);
+        for i in 0..dim {
+            out.rows[i][i] = 1.0;
+        }
+        out
+    }
+
     fn nrows(&self) -> usize {
         self.rows.len()
     }
 
     fn ncols(&self) -> usize {
         self.rows[0].len()
+    }
+
+    fn rowswap(&self, r1: usize, r2: usize) -> Matrix {
+        assert!(r1 + r2 < 2 * self.nrows());
+        let mut out = self.clone();
+        out.rows.swap(r1, r2);
+        out
+    }
+
+    fn rowscale(&self, row: usize, c: f64) -> Matrix {
+        let mut out = self.clone();
+        out.rows[row] = out.rows[row].iter()
+        .map(|entry| entry * c)
+        .collect();
+        out
+    }
+
+    fn rowadd(&self, r1: usize, r2: usize, c: f64) -> Matrix {
+        let mut out = self.clone();
+        for i in 0..self.ncols() {
+            out.rows[r1][i] += c * out.rows[r2][i];
+        }
+        out
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Self {
