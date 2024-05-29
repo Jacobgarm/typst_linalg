@@ -18,6 +18,19 @@ impl std::ops::Add for Matrix {
     }
 }
 
+impl std::ops::Neg for Matrix {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        let mut out = self.clone();
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                out.rows[i][j] *= -1.0;
+            }
+        }
+        out
+    }
+}
+
 impl std::ops::Sub for Matrix {
     type Output = Self;
     fn sub(self, rhs: Matrix) -> Self::Output {
