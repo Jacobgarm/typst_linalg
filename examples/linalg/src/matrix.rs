@@ -100,8 +100,11 @@ impl Matrix {
         out
     }
 
-    fn rowadd(&self, r1: usize, r2: usize) -> Matrix {
+    fn rowadd(&self, r1: usize, r2: usize, c: f64) -> Matrix {
         let mut out = self.clone();
+        for i in 0..self.ncols() {
+            out.rows[r1][i] += c * out.rows[r2][i];
+        }
         out
     }
 
