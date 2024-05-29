@@ -8,3 +8,5 @@
 #let mat_mul(m1, m2) = bytes_mat(p.mul(mat_bytes(m1), mat_bytes(m2)))
 
 #let rowswap(m, r1, r2) = bytes_mat(p.rowswap(mat_bytes(m), bytes(str(r1)), bytes(str(r2))))
+
+#let mat_ref(m) = bytes_mat(p.REF(mat_bytes(m)))

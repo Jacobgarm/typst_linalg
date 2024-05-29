@@ -53,3 +53,9 @@ pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Vec<u8> {
     res.to_bytes()
 }
 
+#[wasm_func]
+pub fn REF(mat_bytes: &[u8]) -> Vec<u8> {
+    let mat = Matrix::from_bytes(mat_bytes);
+    let (res, _) = mat.REF();
+    res.to_bytes()
+}

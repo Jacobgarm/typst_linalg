@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix {
-    rows: Vec<Vec<f64>>,
+    pub rows: Vec<Vec<f64>>,
 }
 
 impl std::ops::Add for Matrix {
@@ -86,7 +86,6 @@ impl Matrix {
     }
 
     pub fn rowswap(&self, r1: usize, r2: usize) -> Matrix {
-        assert!(r1 + r2 < 2 * self.nrows());
         let mut out = self.clone();
         out.rows.swap(r1, r2);
         out
@@ -104,6 +103,49 @@ impl Matrix {
             out.rows[r1][i] += c * out.rows[r2][i];
         }
         out
+    }
+
+    pub fn REF(&self) -> (Matrix, usize) {
+        let mut out = self.clone();
+        let rows = self.nrows();
+        let cols = self.ncols();
+        let mut prow = 0;
+        let mut pcol = 0;
+        let mut swaps = 0;
+
+        while (prow < rows && pcol < cols) {
+            let mut leading_values = vec![0; rows - prow];
+            let mut max_leading = prow;
+
+            for i in prow..rows {
+                if out.rows[i][pcol] != 0.0 {
+                    leading_values[i - prow] = i;
+                    if out.rows[i][pcol].abs() > out.rows[max_leading][pcol].abs() {
+                        max_leading = i;
+                    }
+                }
+            }
+
+            if leading_values.len() == 0 {
+                pcol += 1;
+                continue;
+            }
+
+            if prow != max_leading {
+                out = out.rowswap(prow, max_leading);
+                swaps += 1
+            }
+
+            for i in (prow + 1)..rows {
+                let mult = out.rows[i][pcol] / out.rows[prow][pcol];
+                out = out.rowadd(i, prow, -mult);
+                out.rows[i][pcol] = 0.0;
+            }
+
+            prow += 1;
+            pcol += 1;
+        }
+        (out, swaps)
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Self {
