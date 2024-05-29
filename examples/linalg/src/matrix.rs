@@ -34,8 +34,15 @@ impl std::ops::Sub for Matrix {
 impl std::ops::Mul for Matrix {
     type Output = Self;
     fn mul(self, rhs: Matrix) -> Self::Output {
-        let mut out = Matrix::zero(self.nrows(), self.ncols());
-        for i in 0..s
+        let mut out = Matrix::zero(self.nrows(), rhs.ncols());
+        for i in 0..self.nrows() {
+            for j in 0..rhs.ncols() {
+                for k in 0..rhs.nrows() {
+                    out.rows[i][j] += self.rows[i][k] * rhs.rows[k][j];
+                }
+            }
+        }
+        out
     }
 }
     
