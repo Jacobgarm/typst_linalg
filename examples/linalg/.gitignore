@@ -1,6 +1,0 @@
-/target
-/hello.pdf
-/linalg.wasm
-/hello-wasi.wasm
-
-Cargo.lock
