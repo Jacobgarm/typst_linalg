@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix {
-    rows: Vec<Vec<f64>>
+    rows: Vec<Vec<f64>>,
 }
 
 impl std::ops::Add for Matrix {
@@ -11,7 +11,7 @@ impl std::ops::Add for Matrix {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-               out.rows[i][j] += rhs.rows[i][j];
+                out.rows[i][j] += rhs.rows[i][j];
             }
         }
         out
@@ -45,15 +45,14 @@ impl std::ops::Mul for Matrix {
         out
     }
 }
-    
-impl Matrix {
 
+impl Matrix {
     fn zero(rows: usize, cols: usize) -> Self {
         let mut out: Vec<Vec<f64>> = Vec::new();
-        let zero_vec = vec![0 as f64 ; cols];
+        let zero_vec = vec![0 as f64; cols];
         for _ in 0..rows {
             out.push(zero_vec.clone());
-        }       
+        }
         Matrix { rows: out }
     }
 
@@ -65,25 +64,31 @@ impl Matrix {
         self.rows[0].len()
     }
 
-    fn from_bytes(bytes: &[u8]) -> Self {
+    pub fn from_bytes(bytes: &[u8]) -> Self {
         let s = std::str::from_utf8(bytes).unwrap().to_owned();
         let mut rows = Vec::new();
         for row in s.split(';') {
             rows.push(
-                row.split(',').map(|entry| f64::from_str(entry).unwrap()).collect()
+                row.split(',')
+                    .map(|entry| f64::from_str(entry).unwrap())
+                    .collect(),
             )
         }
-        Matrix {
-            rows
-        }
+        Matrix { rows }
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
-        let s = self.rows.iter().map(
-            |row| row.iter().map(
-                |entry| entry.to_string()).collect::<Vec<String>>().join(",")
-            ).collect::<Vec<String>>().join(";");
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let s = self
+            .rows
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|entry| entry.to_string())
+                    .collect::<Vec<String>>()
+                    .join(",")
+            })
+            .collect::<Vec<String>>()
+            .join(";");
         s.as_bytes().to_vec()
     }
 }
-
