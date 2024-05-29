@@ -94,9 +94,7 @@ impl Matrix {
 
     pub fn rowscale(&self, row: usize, c: f64) -> Matrix {
         let mut out = self.clone();
-        out.rows[row] = out.rows[row].iter()
-        .map(|entry| entry * c)
-        .collect();
+        out.rows[row] = out.rows[row].iter().map(|entry| entry * c).collect();
         out
     }
 
@@ -127,7 +125,10 @@ impl Matrix {
             .iter()
             .map(|row| {
                 row.iter()
-                    .map(|entry| entry.to_string())
+                    .map(|entry| {
+                        let entry_s = entry.to_string();
+                        truncate_zeroes(entry_s)
+                    })
                     .collect::<Vec<String>>()
                     .join(",")
             })
@@ -135,4 +136,24 @@ impl Matrix {
             .join(";");
         s.as_bytes().to_vec()
     }
+}
+
+fn truncate_zeroes(num_str: String) -> String {
+    let mut sep_found = false;
+    let mut zeroes = 0;
+    for (i, c) in num_str.chars().enumerate() {
+        if c == '.' {
+            sep_found = true;
+            continue;
+        }
+        if sep_found && c == '0' {
+            zeroes += 1;
+            if zeroes == 10 {
+                return (num_str[..=i]).to_owned();
+            }
+        } else {
+            zeroes = 0;
+        }
+    }
+    num_str
 }

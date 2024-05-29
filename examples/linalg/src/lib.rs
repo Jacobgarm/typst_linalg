@@ -1,3 +1,4 @@
+#![feature(f128)]
 use wasm_minimal_protocol::*;
 
 mod matrix;
@@ -38,8 +39,17 @@ binary!(mul, { |m1: Matrix, m2: Matrix| m1 * m2 });
 #[wasm_func]
 pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Vec<u8> {
     let mat = Matrix::from_bytes(mat_bytes);
-    let r1 = std::str::from_utf8(r1_bytes).unwrap().to_owned().parse::<usize>().unwrap();
-    let r2 = std::str::from_utf8(r2_bytes).unwrap().to_owned().parse::<usize>().unwrap();
+    let r1 = std::str::from_utf8(r1_bytes)
+        .unwrap()
+        .to_owned()
+        .parse::<usize>()
+        .unwrap();
+    let r2 = std::str::from_utf8(r2_bytes)
+        .unwrap()
+        .to_owned()
+        .parse::<usize>()
+        .unwrap();
     let res = mat.rowswap(r1, r2);
     res.to_bytes()
 }
+
