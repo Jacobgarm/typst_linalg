@@ -109,6 +109,16 @@ impl Matrix {
         out
     }
 
+    fn scale(&self, scalar: f64) -> Self {
+        let mut out = self.clone();
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                out[j][i] *= scalar;
+            }
+        }
+        out
+    }
+
     pub fn rowswap(&self, r1: usize, r2: usize) -> Matrix {
         assert!(r1 + r2 < 2 * self.nrows());
         let mut out = self.clone();
@@ -164,13 +174,14 @@ impl Matrix {
 
 fn truncate_zeroes(num_str: String) -> String {
     let mut sep_found = false;
+    let mut nonzero_found = false;
     let mut zeroes = 0;
     for (i, c) in num_str.chars().enumerate() {
         if c == '.' {
             sep_found = true;
-            continue;
-        }
-        if sep_found && c == '0' {
+        } else if "123456789".contains(c) {
+            nonzero_found = true;
+        } else if sep_found && nonzero_found && c == '0' {
             zeroes += 1;
             if zeroes == 10 {
                 return (num_str[..=i]).to_owned();
