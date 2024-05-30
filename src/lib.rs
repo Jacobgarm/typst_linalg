@@ -31,6 +31,7 @@ macro_rules! binary {
 }
 
 unary!(neg, { |m: Matrix| -m });
+unary!(transpose, { |m: Matrix| m.transpose() });
 
 binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });
 binary!(sub, { |m1: Matrix, m2: Matrix| m1 - m2 });
@@ -59,3 +60,4 @@ pub fn REF(mat_bytes: &[u8]) -> Vec<u8> {
     let (res, _) = mat.REF();
     res.to_bytes()
 }
+
