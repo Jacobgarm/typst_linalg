@@ -187,7 +187,7 @@ impl Matrix {
                 }
             }
 
-            if leading_values.iter().all(|x| *x == 0) {
+            if leading_values.is_empty() {
                 println!("continue");
                 pcol += 1;
                 continue;
