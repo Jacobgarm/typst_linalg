@@ -156,6 +156,15 @@ impl Matrix {
         Ok(out)
     }
 
+    pub fn det(&self) -> f64 {
+        let (mat_ref, swaps) = self.REF();
+        let mut determinant = 1.0;
+        for i in 0..self.ncols() {
+            determinant *= mat_ref[i][i];
+        }
+        (-1.0_f64).powi(swaps as i32) * determinant
+    }
+
     pub fn REF(&self) -> (Matrix, usize) {
         let mut out = self.clone();
         let rows = self.nrows();
@@ -177,11 +186,12 @@ impl Matrix {
                 }
             }
 
-            if leading_values.len() == 0 {
+            if leading_values.iter().all(|x| *x == 0) {
                 pcol += 1;
                 continue;
             }
 
+            dbg!(prow, max_leading);
             if prow != max_leading {
                 out = out.rowswap(prow, max_leading).unwrap();
                 swaps += 1
@@ -194,9 +204,25 @@ impl Matrix {
             }
 
             prow += 1;
+            dbg!(prow);
             pcol += 1;
         }
         (out, swaps)
+    }
+
+    pub fn RREF(&self) -> Matrix {
+        let (mut out, _) = self.REF();
+        let rows = self.nrows();
+        let cols = self.ncols();
+
+        for i in 0..rows {
+            let row = &out[i];
+            if row.iter().all(|x| *x == 0.0) {
+                return out;
+            }
+
+        }
+        (out)
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Self {

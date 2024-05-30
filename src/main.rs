@@ -6,10 +6,11 @@ fn main() {
         rows: vec![
             vec![1.0, -4.0, 2.0],
             vec![0.0, 0.0, 5.0],
-            vec![0.0, 2.0, 0.0],
+            vec![0.0, 0.0, 0.0],
         ],
     };
-    let (s, _) = m.REF();
-    print!("{:?}", s);
+    let (a, _) = m.REF();
+    let s = m.det();
+    dbg!(a);
 }
 
