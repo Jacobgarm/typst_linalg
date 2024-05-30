@@ -163,18 +163,18 @@ impl Matrix {
             for i in prow..rows {
                 if out.rows[i][pcol] != 0.0 {
                     leading_values[i - prow] = i;
+                    dbg!(prow, i, out.rows[i][pcol], out.rows[max_leading][pcol]);
                     if out.rows[i][pcol].abs() > out.rows[max_leading][pcol].abs() {
                         max_leading = i;
                     }
                 }
             }
 
-            if leading_values.iter().all(|x| *x == 0) {
+            if leading_values.iter().all(|x| *x == 0) && pcol != 0 {
+                println!("continue");
                 pcol += 1;
                 continue;
             }
-
-            dbg!(prow, max_leading);
             if prow != max_leading {
                 out = out.rowswap(prow, max_leading);
                 swaps += 1
@@ -187,7 +187,6 @@ impl Matrix {
             }
 
             prow += 1;
-            dbg!(prow);
             pcol += 1;
         }
         (out, swaps)
@@ -203,7 +202,6 @@ impl Matrix {
             if row.iter().all(|x| *x == 0.0) {
                 return out;
             }
-
         }
         (out)
     }
