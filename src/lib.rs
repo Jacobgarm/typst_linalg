@@ -1,4 +1,3 @@
-#![feature(f128)]
 use wasm_minimal_protocol::*;
 
 mod matrix;
