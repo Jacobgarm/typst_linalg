@@ -174,12 +174,12 @@ impl Matrix {
         let mut swaps = 0;
 
         while prow < rows && pcol < cols {
-            let mut leading_values = vec![0; rows - prow];
+            let mut leading_values = vec![];
             let mut max_leading = prow;
 
             for i in prow..rows {
                 if out.rows[i][pcol] != 0.0 {
-                    leading_values[i - prow] = i;
+                    leading_values.push(i);
                     dbg!(prow, i, out.rows[i][pcol], out.rows[max_leading][pcol]);
                     if out.rows[i][pcol].abs() > out.rows[max_leading][pcol].abs() {
                         max_leading = i;
@@ -187,7 +187,7 @@ impl Matrix {
                 }
             }
 
-            if leading_values.iter().all(|x| *x == 0) && pcol != 0 {
+            if leading_values.iter().all(|x| *x == 0) {
                 println!("continue");
                 pcol += 1;
                 continue;
