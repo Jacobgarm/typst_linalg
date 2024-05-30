@@ -206,17 +206,24 @@ impl Matrix {
         (out)
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Self {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let s = std::str::from_utf8(bytes).unwrap().to_owned();
-        let mut rows = Vec::new();
+
+        let mut rows: Vec<Vec<f64>> = Vec::new();
+        let mut row_length = usize::MAX;
         for row in s.split(';') {
             rows.push(
                 row.split(',')
                     .map(|entry| f64::from_str(entry).unwrap())
                     .collect(),
-            )
+            );
+            if row_length == usize::MAX {
+                row_length = rows.last().unwrap().len();
+            } else if rows.last().unwrap().len() != row_length {
+                return Err("Non rectangular matrix".to_owned());
+            }
         }
-        Matrix { rows }
+        Ok(Matrix { rows })
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
