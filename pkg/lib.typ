@@ -10,3 +10,5 @@
 #let rowswap(m, r1, r2) = bytes_mat(p.rowswap(mat_bytes(m), bytes(str(r1)), bytes(str(r2))))
 
 #let REF(m) = bytes_mat(p.REF(mat_bytes(m)))
+
+#let det(m) = float(str(p.det(mat_bytes(m))))

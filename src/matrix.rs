@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use crate::convert::Convertable;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix {
     pub rows: Vec<Vec<f64>>,
@@ -156,13 +158,16 @@ impl Matrix {
         Ok(out)
     }
 
-    pub fn det(&self) -> f64 {
+    pub fn det(&self) -> Result<f64, String> {
+        if !self.is_square() {
+            return Err("Non-square matrix has no determinant".to_owned());
+        }
         let (mat_ref, swaps) = self.REF();
         let mut determinant = 1.0;
         for i in 0..self.ncols() {
             determinant *= mat_ref[i][i];
         }
-        (-1.0_f64).powi(swaps as i32) * determinant
+        Ok((-1.0_f64).powi(swaps as i32) * determinant)
     }
 
     pub fn REF(&self) -> (Matrix, usize) {
@@ -222,8 +227,10 @@ impl Matrix {
         }
         (out)
     }
+}
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+impl Convertable for Matrix {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let s = std::str::from_utf8(bytes).unwrap().to_owned();
 
         let mut rows: Vec<Vec<f64>> = Vec::new();
@@ -243,7 +250,7 @@ impl Matrix {
         Ok(Matrix { rows })
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         let s = self
             .rows
             .iter()

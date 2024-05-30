@@ -1,7 +1,9 @@
 use wasm_minimal_protocol::*;
 
+mod convert;
 mod matrix;
 mod vector;
+use convert::Convertable;
 use matrix::*;
 
 initiate_protocol!();
@@ -9,10 +11,10 @@ initiate_protocol!();
 macro_rules! unary {
     ($name: tt, $content: tt) => {
         #[wasm_func]
-        pub fn $name(arg: &[u8]) -> Vec<u8> {
-            let mat = Matrix::from_bytes(arg);
+        pub fn $name(arg: &[u8]) -> Result<Vec<u8>, String> {
+            let mat = Matrix::from_bytes(arg)?;
             let res = $content(mat);
-            res.to_bytes()
+            Ok(res.to_bytes())
         }
     };
 }
@@ -21,7 +23,7 @@ macro_rules! unary_err {
     ($name: tt, $content: tt) => {
         #[wasm_func]
         pub fn $name(arg: &[u8]) -> Result<Vec<u8>, String> {
-            let mat = Matrix::from_bytes(arg);
+            let mat = Matrix::from_bytes(arg)?;
             let res = $content(mat)?;
             Ok(res.to_bytes())
         }
@@ -31,11 +33,11 @@ macro_rules! unary_err {
 macro_rules! binary {
     ($name: tt, $content: tt) => {
         #[wasm_func]
-        pub fn $name(arg1: &[u8], arg2: &[u8]) -> Vec<u8> {
-            let mat1 = Matrix::from_bytes(arg1);
-            let mat2 = Matrix::from_bytes(arg2);
+        pub fn $name(arg1: &[u8], arg2: &[u8]) -> Result<Vec<u8>, String> {
+            let mat1 = Matrix::from_bytes(arg1)?;
+            let mat2 = Matrix::from_bytes(arg2)?;
             let res = $content(mat1, mat2);
-            res.to_bytes()
+            Ok(res.to_bytes())
         }
     };
 }
@@ -43,7 +45,7 @@ macro_rules! binary {
 unary!(neg, { |m: Matrix| -m });
 unary!(transpose, { |m: Matrix| m.transpose() });
 unary!(REF, { |m: Matrix| m.REF().0 });
-unary_err!(double_third, { |m: Matrix| m.rowscale(2, 2.0) });
+unary_err!(det, { |m: Matrix| m.det() });
 
 binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });
 binary!(sub, { |m1: Matrix, m2: Matrix| m1 - m2 });
@@ -51,7 +53,7 @@ binary!(mul, { |m1: Matrix, m2: Matrix| m1 * m2 });
 
 #[wasm_func]
 pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let mat = Matrix::from_bytes(mat_bytes);
+    let mat = Matrix::from_bytes(mat_bytes)?;
     let r1 = std::str::from_utf8(r1_bytes)
         .unwrap()
         .to_owned()
