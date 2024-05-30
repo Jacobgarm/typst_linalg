@@ -1,4 +1,3 @@
-#![feature(f128)]
 use wasm_minimal_protocol::*;
 
 mod matrix;
@@ -31,6 +30,8 @@ macro_rules! binary {
 }
 
 unary!(neg, { |m: Matrix| -m });
+unary!(transpose, { |m: Matrix| m.transpose() });
+unary!(REF, { |m: Matrix| m.REF().0 });
 
 binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });
 binary!(sub, { |m1: Matrix, m2: Matrix| m1 - m2 });
@@ -50,12 +51,5 @@ pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Vec<u8> {
         .parse::<usize>()
         .unwrap();
     let res = mat.rowswap(r1, r2);
-    res.to_bytes()
-}
-
-#[wasm_func]
-pub fn REF(mat_bytes: &[u8]) -> Vec<u8> {
-    let mat = Matrix::from_bytes(mat_bytes);
-    let (res, _) = mat.REF();
     res.to_bytes()
 }

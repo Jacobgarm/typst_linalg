@@ -99,7 +99,7 @@ impl Matrix {
         self.rows[0].len()
     }
 
-    fn transpose(&self) -> Self {
+    pub fn transpose(&self) -> Self {
         let mut out = Matrix::zero(self.ncols(), self.nrows());
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
