@@ -17,6 +17,17 @@ macro_rules! unary {
     };
 }
 
+macro_rules! unary_err {
+    ($name: tt, $content: tt) => {
+        #[wasm_func]
+        pub fn $name(arg: &[u8]) -> Result<Vec<u8>, String> {
+            let mat = Matrix::from_bytes(arg);
+            let res = $content(mat)?;
+            Ok(res.to_bytes())
+        }
+    };
+}
+
 macro_rules! binary {
     ($name: tt, $content: tt) => {
         #[wasm_func]
@@ -32,13 +43,14 @@ macro_rules! binary {
 unary!(neg, { |m: Matrix| -m });
 unary!(transpose, { |m: Matrix| m.transpose() });
 unary!(REF, { |m: Matrix| m.REF().0 });
+unary_err!(double_third, { |m: Matrix| m.rowscale(2, 2.0) });
 
 binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });
 binary!(sub, { |m1: Matrix, m2: Matrix| m1 - m2 });
 binary!(mul, { |m1: Matrix, m2: Matrix| m1 * m2 });
 
 #[wasm_func]
-pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Vec<u8> {
+pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Result<Vec<u8>, String> {
     let mat = Matrix::from_bytes(mat_bytes);
     let r1 = std::str::from_utf8(r1_bytes)
         .unwrap()
@@ -50,6 +62,6 @@ pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Vec<u8> {
         .to_owned()
         .parse::<usize>()
         .unwrap();
-    let res = mat.rowswap(r1, r2);
-    res.to_bytes()
+    let res = mat.rowswap(r1, r2)?;
+    Ok(res.to_bytes())
 }

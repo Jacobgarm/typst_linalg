@@ -74,13 +74,17 @@ impl std::ops::IndexMut<usize> for Matrix {
 }
 
 impl Matrix {
-    fn zero(rows: usize, cols: usize) -> Self {
+    fn filled(rows: usize, cols: usize, value: f64) -> Self {
         let mut out: Vec<Vec<f64>> = Vec::new();
-        let zero_vec = vec![0 as f64; cols];
+        let zero_vec = vec![value; cols];
         for _ in 0..rows {
             out.push(zero_vec.clone());
         }
         Matrix { rows: out }
+    }
+
+    fn zero(rows: usize, cols: usize) -> Self {
+        Matrix::filled(rows, cols, 0.0)
     }
 
     fn id(dim: usize) -> Self {
@@ -97,6 +101,10 @@ impl Matrix {
 
     fn ncols(&self) -> usize {
         self.rows[0].len()
+    }
+
+    fn is_square(&self) -> bool {
+        self.nrows() == self.ncols()
     }
 
     pub fn transpose(&self) -> Self {
@@ -119,24 +127,33 @@ impl Matrix {
         out
     }
 
-    pub fn rowswap(&self, r1: usize, r2: usize) -> Matrix {
+    pub fn rowswap(&self, r1: usize, r2: usize) -> Result<Matrix, String> {
+        if r1 >= self.nrows() || r2 >= self.nrows() {
+            return Err(format!("Row index exceeds last row"));
+        }
         let mut out = self.clone();
         out.rows.swap(r1, r2);
-        out
+        Ok(out)
     }
 
-    pub fn rowscale(&self, row: usize, c: f64) -> Matrix {
+    pub fn rowscale(&self, row: usize, c: f64) -> Result<Matrix, String> {
+        if row >= self.nrows() {
+            return Err(format!("Row index exceeds last row"));
+        }
         let mut out = self.clone();
         out.rows[row] = out.rows[row].iter().map(|entry| entry * c).collect();
-        out
+        Ok(out)
     }
 
-    pub fn rowadd(&self, r1: usize, r2: usize, c: f64) -> Matrix {
+    pub fn rowadd(&self, r1: usize, r2: usize, c: f64) -> Result<Matrix, String> {
+        if r1 >= self.nrows() && r2 >= self.nrows() {
+            return Err(format!("Row index exceeds last row"));
+        }
         let mut out = self.clone();
         for i in 0..self.ncols() {
             out.rows[r1][i] += c * out.rows[r2][i];
         }
-        out
+        Ok(out)
     }
 
     pub fn REF(&self) -> (Matrix, usize) {
@@ -147,7 +164,7 @@ impl Matrix {
         let mut pcol = 0;
         let mut swaps = 0;
 
-        while (prow < rows && pcol < cols) {
+        while prow < rows && pcol < cols {
             let mut leading_values = vec![0; rows - prow];
             let mut max_leading = prow;
 
@@ -166,13 +183,13 @@ impl Matrix {
             }
 
             if prow != max_leading {
-                out = out.rowswap(prow, max_leading);
+                out = out.rowswap(prow, max_leading).unwrap();
                 swaps += 1
             }
 
             for i in (prow + 1)..rows {
                 let mult = out.rows[i][pcol] / out.rows[prow][pcol];
-                out = out.rowadd(i, prow, -mult);
+                out = out.rowadd(i, prow, -mult).unwrap();
                 out.rows[i][pcol] = 0.0;
             }
 
