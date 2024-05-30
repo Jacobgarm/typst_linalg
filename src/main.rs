@@ -9,7 +9,7 @@ fn main() {
             vec![0.0, 2.0, 0.0],
         ],
     };
-    let s = m.REF();
+    let (s, _) = m.REF();
     print!("{:?}", s);
 }
 
