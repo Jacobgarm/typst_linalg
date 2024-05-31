@@ -11,5 +11,7 @@
 
 #let REF(m) = bytes_mat(p.REF(mat_bytes(m)))
 #let RREF(m) = bytes_mat(p.RREF(mat_bytes(m)))
+#let inverse(m) = bytes_mat(p.inverse(mat_bytes(m)))
 
 #let det(m) = float(str(p.det(mat_bytes(m))))
+#let trace(m) = float(str(p.trace(mat_bytes(m))))
