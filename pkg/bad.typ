@@ -126,68 +126,14 @@
   )
 }
 
-// Multiplies a 4x4 matrix and a 3D vector, producing a 4D vector
-// with a homogenous coordinate.
-#let multiply-mat-vec(m, v) = {
-  let (
-    m11, m12, m13, m14,
-		m21, m22, m23, m24,
-		m31, m32, m33, m34,
-		m41, m42, m43, m44,
-  ) = m
-  let (v1, v2, v3) = v
-  let x = v1 * m11 + v2 * m12 + v3 * m13 + m14
-  let y = v1 * m21 + v2 * m22 + v3 * m23 + m24
-  let z = v1 * m31 + v2 * m32 + v3 * m33 + m34
-  let w = v1 * m41 + v2 * m42 + v3 * m43 + m44
-  (x, y, z, w)
-}
-
-// Multiplies two 4x4 matrices.
-#let multiply-mat-mat(a, b) = {
-  let (
-    a11, a12, a13, a14,
-		a21, a22, a23, a24,
-		a31, a32, a33, a34,
-		a41, a42, a43, a44,
-  ) = a
-  let (
-    b11, b12, b13, b14,
-		b21, b22, b23, b24,
-		b31, b32, b33, b34,
-		b41, b42, b43, b44,
-  ) = b
-  let c11 = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41
-  let c12 = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42
-  let c13 = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43
-  let c14 = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44
-  let c21 = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41
-  let c22 = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42
-  let c23 = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43
-  let c24 = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44
-  let c31 = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41
-  let c32 = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42
-  let c33 = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43
-  let c34 = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44
-  let c41 = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41
-  let c42 = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42
-  let c43 = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43
-  let c44 = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44
-  (
-    c11, c12, c13, c14,
-		c21, c22, c23, c24,
-		c31, c32, c33, c34,
-		c41, c42, c43, c44,
-  )
-}
 
 // Turns normalized coordinates into screen coordinates.
 #let screenify(x, y) = ((x + 0.5) * pxw, (y + 0.5) * pxh)
 
 // Renders a single object in the level.
 #let render-obj(obj, ts) = {
-  ts = multiply-mat-mat(ts, translation(..obj.pos))
-  ts = multiply-mat-mat(ts, scaling(..obj.scale))
+  ts = mat.mul(ts, translation(..obj.pos))
+  ts = mat.mul(ts, scaling(..obj.scale))
 
   let lines = ()
   let (vertices, faces) = obj.geom
@@ -198,8 +144,9 @@
       let i2 = calc.rem(i + 1, len)
       let v1 = vertices.at(face.at(i))
       let v2 = vertices.at(face.at(i2))
-      let (x1, y1, z1, w1) = multiply-mat-vec(ts, v1)
-      let (x2, y2, z2, w2) = multiply-mat-vec(ts, v2)
+      let (x1, y1, z1, w1) = mat.mul_vec(ts, mat.vec(..v1, 1)).children.map(c => float(c.text))
+      let (x2, y2, z2, w2) = mat.mul_vec(ts, mat.vec(..v2, 1)).children.map(c => float(c.text))
+
       if (w1 >= near or w2 >= near) and w1 <= far and w2 <= far {
         // Find center point if one of the points is off-screen.
         if w1 <= 0 {
@@ -406,9 +353,9 @@
 #let render(state) = {
   // Determine the view transformation.
   let (x, y, z) = state.pos
-  let ts = multiply-mat-mat(
+  let ts = mat.mul(
     perspective(pxw / pxh, fov, far, near),
-    multiply-mat-mat(
+    mat.mul(
       rotation-y(state.rot),
       translation(-x, -y - 1, -z),
     ),
