@@ -49,6 +49,8 @@ unary!(transpose, { |m: Matrix| m.transpose() });
 unary!(REF, { |m: Matrix| m.REF().0 });
 unary!(RREF, { |m: Matrix| m.RREF() });
 unary_err!(det, { |m: Matrix| m.det() });
+unary_err!(trace, { |m: Matrix| m.trace() });
+unary_err!(inverse, { |m: Matrix| m.inverse() });
 
 binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });
 binary!(sub, { |m1: Matrix, m2: Matrix| m1 - m2 });

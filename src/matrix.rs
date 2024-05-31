@@ -111,6 +111,10 @@ impl Matrix {
         self.nrows() == self.ncols()
     }
 
+    fn is_invertible(&self) -> bool {
+        self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
+    }
+
     pub fn transpose(&self) -> Self {
         let mut out = Matrix::zero(self.ncols(), self.nrows());
         for i in 0..self.nrows() {
@@ -158,6 +162,36 @@ impl Matrix {
             out[r1][i] += c * out[r2][i];
         }
         Ok(out)
+    }
+
+    fn augment_cols(&self, right: Matrix) -> Result<Matrix, String> {
+        if self.nrows() != right.nrows() {
+            return Err("Cannot horizontally augment matrices of different heights".to_owned());
+        }
+        let mut augmented = self.clone();
+        for i in 0..self.nrows() {
+            augmented[i].extend(right[i].clone());
+        }
+        Ok(augmented)
+    }
+
+    fn augment_rows(&self, below: Matrix) -> Result<Matrix, String> {
+        if self.ncols() != below.ncols() {
+            return Err("Cannot vertically augment matrices of different widths".to_owned());
+        }
+        let mut augmented = self.clone();
+        for i in 0..below.nrows() {
+            augmented.rows.push(below[i].clone());
+        }
+        Ok(augmented)
+    }
+
+    pub fn trace(&self) -> Result<f64, String> {
+        if !self.is_square() {
+            return Err("Cannot compute trace of non-square matrix".to_owned());
+        }
+        let trace = self.rows.iter().enumerate().map(|(i, row)| row[i]).sum();
+        Ok(trace)
     }
 
     pub fn det(&self) -> Result<f64, String> {
@@ -228,7 +262,7 @@ impl Matrix {
                 }
             }
 
-            out = out.rowscale(row, 1.0/out[row][pcol]).unwrap();
+            out = out.rowscale(row, 1.0 / out[row][pcol]).unwrap();
             out[row][pcol] = 1.0;
 
             for i in 0..row {
@@ -237,6 +271,20 @@ impl Matrix {
             }
         }
         out
+    }
+
+    pub fn inverse(&self) -> Result<Matrix, String> {
+        if !self.is_invertible() {
+            return Err("Matrix is not invertible".to_owned());
+        }
+        let augmented = self.augment_cols(Matrix::id(self.nrows())).unwrap();
+        dbg!(&augmented);
+        let reduced = augmented.RREF();
+        let mut inverse_rows = Vec::new();
+        for row in &reduced.rows {
+            inverse_rows.push(row[self.ncols()..].to_vec())
+        }
+        Ok(Matrix { rows: inverse_rows })
     }
 }
 
