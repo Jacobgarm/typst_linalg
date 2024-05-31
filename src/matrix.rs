@@ -365,6 +365,7 @@ impl Matrix {
 
         Ok(res)
     }
+
     pub fn exp(&self) -> Result<Matrix, String> {
         if !self.is_square() {
             return Err("Cannot exponentiate non-square matrix".to_owned());
@@ -379,60 +380,60 @@ impl Matrix {
     }
 
     pub fn QR(&self) -> Result<(Matrix, Matrix), String> {
-        if !self.is_square() {
-            return Err("Matrix is not square".to_owned());
-        }
+        // if !self.is_square() {
+        //     return Err("Matrix is not square".to_owned());
+        // }
 
-        let dim = self.ncols();
-        let mut in_mat = self.clone();
-        let mut p_matrices: Vec<Matrix> = vec![];
+        // let dim = self.ncols();
+        // let mut in_mat = self.clone();
+        // let mut p_matrices: Vec<Matrix> = vec![];
 
-        // Go through each column
-        for j in 0..dim - 1 {
-            let mut a1 = Vector {
-                entries: vec![0.0; dim - j],
-            };
-            let mut b1 = Vector {
-                entries: vec![0.0; dim - j],
-            };
-            b1[0] = 1.0;
-            // Set values for a
-            for i in j..dim {
-                a1[i - j] = in_mat[i][j]
-            }
+        // // Go through each column
+        // for j in 0..dim - 1 {
+        //     let mut a1 = Vector {
+        //         entries: vec![0.0; dim - j],
+        //     };
+        //     let mut b1 = Vector {
+        //         entries: vec![0.0; dim - j],
+        //     };
+        //     b1[0] = 1.0;
+        //     // Set values for a
+        //     for i in j..dim {
+        //         a1[i - j] = in_mat[i][j]
+        //     }
 
-            let a1_norm = a1.norm();
-            let sgn = a1[0].signum().neg();
+        //     let a1_norm = a1.norm();
+        //     let sgn = a1[0].signum().neg();
 
-            let u = a1 - (b1.scale(a1_norm).scale(sgn));
-            let n = u.normalised();
-            let id = Matrix::id(dim - j);
-            let p_temp = id - n.outer_mul(&n);
+        //     let u = a1 - (b1.scale(a1_norm).scale(sgn));
+        //     let n = u.normalised();
+        //     let id = Matrix::id(dim - j);
+        //     let p_temp = id - n.outer_mul(&n);
 
-            let mut p = Matrix::id(dim);
-            for row in j..dim {
-                for col in j..dim {
-                    p[row][col] = p_temp[row - j][col - j];
-                }
-            }
-            in_mat = p.clone() * in_mat;
-            p_matrices.push(p);
-        }
+        //     let mut p = Matrix::id(dim);
+        //     for row in j..dim {
+        //         for col in j..dim {
+        //             p[row][col] = p_temp[row - j][col - j];
+        //         }
+        //     }
+        //     in_mat = p.clone() * in_mat;
+        //     p_matrices.push(p);
+        // }
 
-        // Compute Q
-        let length = p_matrices.len();
-        let mut Q = p_matrices[0].clone();
-        for i in 1..length {
-            Q = Q * p_matrices[i].clone().transpose();
-        }
-        // Compute R
-        let mut R = p_matrices[length - 1].clone();
-        for i in (0..=length - 2).rev() {
-            R = R * p_matrices[i].clone();
-        }
-        R = R.clone() * self.clone();
+        // // Compute Q
+        // let length = p_matrices.len();
+        // let mut Q = p_matrices[0].clone();
+        // for i in 1..length {
+        //     Q = Q * p_matrices[i].clone().transpose();
+        // }
+        // // Compute R
+        // let mut R = p_matrices[length - 1].clone();
+        // for i in (0..=length - 2).rev() {
+        //     R = R * p_matrices[i].clone();
+        // }
+        // R = R.clone() * self.clone();
 
-        Ok((Q, R))
+        // Ok((Q, R))
     }
 }
 
