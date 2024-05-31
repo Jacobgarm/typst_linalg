@@ -160,6 +160,28 @@ impl Matrix {
         Ok(out)
     }
 
+    fn augment_cols(&self, right: Matrix) -> Result<Matrix, String> {
+        if self.nrows() != right.nrows() {
+            return Err("Cannot horizontally augment matrices of different heights".to_owned());
+        }
+        let mut augmented = self.clone();
+        for i in 0..self.nrows() {
+            augmented[i].extend(right[i].clone());
+        }
+        Ok(augmented)
+    }
+
+    fn augment_rows(&self, below: Matrix) -> Result<Matrix, String> {
+        if self.ncols() != below.ncols() {
+            return Err("Cannot vertically augment matrices of different widths".to_owned());
+        }
+        let mut augmented = self.clone();
+        for i in 0..below.nrows() {
+            augmented.rows.push(below[i].clone());
+        }
+        Ok(augmented)
+    }
+
     pub fn det(&self) -> Result<f64, String> {
         if !self.is_square() {
             return Err("Non-square matrix has no determinant".to_owned());

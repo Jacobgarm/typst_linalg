@@ -1,6 +1,7 @@
+use std::str::FromStr;
+
 use crate::common::*;
 use crate::convert::Convertable;
-use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 struct Vector {
