@@ -80,6 +80,14 @@ impl Vector {
         let other_mat = Matrix { rows: vec![other.entries.clone()] };
         self_mat * other_mat
     }
+
+    pub fn inner(&self, other: &Self) -> f64 {
+        let mut res = 0.0;
+        for i in 0..self.dim() {
+            res += self.clone()[i] * other.clone()[i];
+        }
+        res
+    }
 }
 
 impl Convertable for Vector {

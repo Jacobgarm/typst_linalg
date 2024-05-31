@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use std::ops::Neg;
 use std::str::FromStr;
 
@@ -117,6 +118,15 @@ impl Matrix {
         self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
     }
 
+    fn get_vector(&self, col: usize) -> Vector {
+        let rows = self.nrows();
+        let mut out = Vector { entries: vec![0.0; rows] };
+        for i in 0..rows {
+            out[i] = self[i][col].clone();
+        }
+        out
+    }
+
     pub fn is_symmetric(&self) -> bool {
         if !self.is_square() {
             return false;
@@ -213,6 +223,27 @@ impl Matrix {
         let mut out = self.clone();
         for i in 0..self.ncols() {
             out[r1][i] += c * out[r2][i];
+        }
+        Ok(out)
+    }
+
+    pub fn submatrix(&self, row: usize, col: usize) -> Result<Matrix, String> {
+        let rows = self.nrows();
+        let cols = self.ncols();
+        let mut out= Matrix { rows: vec![] };
+        if row >= self.nrows() {
+            return Err(format!("Cannot remove row that does not exist"));
+        }
+        if col >= self.ncols() {
+            return Err(format!("Cannot remove column that does not exist"));
+        }
+        for i in 0..rows {
+            if i == row {
+                continue;
+            }
+            let mut mat_row = self.rows[i].clone();
+            mat_row.remove(col);
+            out.rows.push(mat_row)
         }
         Ok(out)
     }
@@ -379,61 +410,98 @@ impl Matrix {
         Ok(res)
     }
 
+    pub fn householder_standard(v: Vector) -> Matrix {
+        let dim = v.dim();
+        let mut e1 = Vector {
+            entries: vec![0.0; dim],
+        };
+        e1[0] = 1.0;
+        let sgn = v[0].signum();
+        let u = v.clone() + e1.scale(sgn).scale(v.norm());
+        let n = u.normalised();
+        let beta = 2.0 / (n.inner(&n));
+        Matrix::id(dim) - n.outer_mul(&n).scale(beta)
+    }
+
+    pub fn QR(&self) -> Result<(Matrix, Matrix), String> {
+        let cols = self.ncols();
+        let mut m = self.clone();
+        let mut p_matrices: Vec<Matrix> = vec![];
+
+        for i in 0..cols {
+            let v = self.get_vector(i);
+            let p = Matrix::householder_standard(v);
+            p_matrices.push(p.clone());
+            m = p * m;
+        }
+        let num_matrices = p_matrices.len();
+        let mut Q = p_matrices[0].clone();
+        for i in 1..num_matrices {
+            Q = Q * p_matrices[i].clone();
+        }
+
+        let mut R = self.clone();
+        for i in 0..num_matrices {
+            R = p_matrices[i].clone() * R;
+        }
+        Ok((Q, R))
+    }
+
     // pub fn QR(&self) -> Result<(Matrix, Matrix), String> {
-        // if !self.is_square() {
-        //     return Err("Matrix is not square".to_owned());
-        // }
+    //     if !self.is_square() {
+    //         return Err("Matrix is not square".to_owned());
+    //     }
 
-        // let dim = self.ncols();
-        // let mut in_mat = self.clone();
-        // let mut p_matrices: Vec<Matrix> = vec![];
+    //     let dim = self.ncols();
+    //     let mut in_mat = self.clone();
+    //     let mut p_matrices: Vec<Matrix> = vec![];
 
-        // // Go through each column
-        // for j in 0..dim - 1 {
-        //     let mut a1 = Vector {
-        //         entries: vec![0.0; dim - j],
-        //     };
-        //     let mut b1 = Vector {
-        //         entries: vec![0.0; dim - j],
-        //     };
-        //     b1[0] = 1.0;
-        //     // Set values for a
-        //     for i in j..dim {
-        //         a1[i - j] = in_mat[i][j]
-        //     }
+    //     // Go through each column
+    //     for j in 0..dim - 1 {
+    //         let mut a1 = Vector {
+    //             entries: vec![0.0; dim - j],
+    //         };
+    //         let mut b1 = Vector {
+    //             entries: vec![0.0; dim - j],
+    //         };
+    //         b1[0] = 1.0;
+    //         // Set values for a
+    //         for i in j..dim {
+    //             a1[i - j] = in_mat[i][j]
+    //         }
 
-        //     let a1_norm = a1.norm();
-        //     let sgn = a1[0].signum().neg();
+    //         let a1_norm = a1.norm();
+    //         let sgn = a1[0].signum();
 
-        //     let u = a1 - (b1.scale(a1_norm).scale(sgn));
-        //     let n = u.normalised();
-        //     let id = Matrix::id(dim - j);
-        //     let p_temp = id - n.outer_mul(&n);
+    //         let u = a1 - (b1.scale(a1_norm).scale(sgn));
+    //         let n = u.normalised();
+    //         let id = Matrix::id(dim - j);
+    //         let p_temp = id - n.outer_mul(&n);
 
-        //     let mut p = Matrix::id(dim);
-        //     for row in j..dim {
-        //         for col in j..dim {
-        //             p[row][col] = p_temp[row - j][col - j];
-        //         }
-        //     }
-        //     in_mat = p.clone() * in_mat;
-        //     p_matrices.push(p);
-        // }
+    //         let mut p = Matrix::id(dim);
+    //         for row in j..dim {
+    //             for col in j..dim {
+    //                 p[row][col] = p_temp[row - j][col - j];
+    //             }
+    //         }
+    //         in_mat = p.clone() * in_mat;
+    //         p_matrices.push(p);
+    //     }
 
-        // // Compute Q
-        // let length = p_matrices.len();
-        // let mut Q = p_matrices[0].clone();
-        // for i in 1..length {
-        //     Q = Q * p_matrices[i].clone().transpose();
-        // }
-        // // Compute R
-        // let mut R = p_matrices[length - 1].clone();
-        // for i in (0..=length - 2).rev() {
-        //     R = R * p_matrices[i].clone();
-        // }
-        // R = R.clone() * self.clone();
+    //     // Compute Q
+    //     let length = p_matrices.len();
+    //     let mut Q = p_matrices[0].clone();
+    //     for i in 1..length {
+    //         Q = Q * p_matrices[i].clone().transpose();
+    //     }
+    //     // Compute R
+    //     let mut R = p_matrices[length - 1].clone();
+    //     for i in (0..length-1).rev() {
+    //         R = R * p_matrices[i].clone();
+    //     }
+    //     R = R.clone() * self.clone();
 
-        // Ok((Q, R))
+    //     Ok((Q, R))
     // }
 }
 

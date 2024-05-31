@@ -8,13 +8,17 @@ use vector::*;
 fn main() {
     let m = Matrix {
         rows: vec![
-            vec![0.5, 0.75, 0.5],
-            vec![1.0, 0.5, 0.75],
-            vec![0.25, 0.25, 0.25],
+           vec![1.0, -1.0, 4.0],
+           vec![1.0, 4.0, -2.0],
+           vec![1.0, 4.0, 2.0],
+           vec![1.0, -1.0, 0.0]
         ],
+    };
+    let v = Vector {
+        entries : vec![1.0; 4]
     };
     // let a = m.inverse();
     //let s = m.det();
-    // let (Q, R) = m.QR().unwrap();
-    // dbg!(Q, R);
+    let (Q, R) = m.QR().unwrap();
+    dbg!(Q , R);
 }
