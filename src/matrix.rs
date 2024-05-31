@@ -129,7 +129,17 @@ impl Matrix {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-                out[j][i] *= scalar;
+                out[i][j] *= scalar;
+            }
+        }
+        out
+    }
+
+    fn hadamard(&self, rhs: Matrix) -> Self {
+        let mut out = self.clone();
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                out[i][j] *= rhs[i][j];
             }
         }
         out
