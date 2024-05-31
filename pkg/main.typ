@@ -5,7 +5,7 @@
   let m3 = math.mat((1, 4, 2), (0, 0, 5), (0, 2, 0))
   mat.add(mat.REF(m1),m1)
   $m1 m2 =$ 
-  str(mat.det(m1))
+  mat.rowswap(m1,0,1)
 }
 
 

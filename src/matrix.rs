@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use crate::common::*;
 use crate::convert::Convertable;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -75,6 +76,7 @@ impl std::ops::IndexMut<usize> for Matrix {
     }
 }
 
+#[allow(dead_code)]
 impl Matrix {
     fn filled(rows: usize, cols: usize, value: f64) -> Self {
         let mut out: Vec<Vec<f64>> = Vec::new();
@@ -235,17 +237,23 @@ impl Convertable for Matrix {
 
         let mut rows: Vec<Vec<f64>> = Vec::new();
         let mut row_length = usize::MAX;
-        for row in s.split(';') {
-            rows.push(
-                row.split(',')
-                    .map(|entry| f64::from_str(entry).unwrap())
-                    .collect(),
-            );
-            if row_length == usize::MAX {
-                row_length = rows.last().unwrap().len();
-            } else if rows.last().unwrap().len() != row_length {
-                return Err("Non rectangular matrix".to_owned());
+        for row_str in s.split(';') {
+            let mut row = Vec::new();
+            for entry in row_str.split(',') {
+                let res_float = f64::from_str(entry);
+                match res_float {
+                    Ok(float) => row.push(float),
+                    Err(err) => return Err(err.to_string()),
+                }
             }
+
+            if row_length == usize::MAX {
+                row_length = row.len();
+            } else if row.len() != row_length {
+                return Err("Non-rectangular matrix".to_owned());
+            }
+
+            rows.push(row);
         }
         Ok(Matrix { rows })
     }
@@ -267,25 +275,4 @@ impl Convertable for Matrix {
             .join(";");
         s.as_bytes().to_vec()
     }
-}
-
-fn truncate_zeroes(num_str: String) -> String {
-    let mut sep_found = false;
-    let mut nonzero_found = false;
-    let mut zeroes = 0;
-    for (i, c) in num_str.chars().enumerate() {
-        if c == '.' {
-            sep_found = true;
-        } else if "123456789".contains(c) {
-            nonzero_found = true;
-        } else if sep_found && nonzero_found && c == '0' {
-            zeroes += 1;
-            if zeroes == 10 {
-                return (num_str[..=i]).to_owned();
-            }
-        } else {
-            zeroes = 0;
-        }
-    }
-    num_str
 }
