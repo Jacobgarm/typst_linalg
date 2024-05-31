@@ -3,10 +3,8 @@
 #let mat_bytes(m) = bytes(m.rows.map(row => row.map(item => item.text.replace("−","-")).join(",")).join(";"))
 #let bytes_mat(b) = math.mat(..str(b).split(";").map(row_s => row_s.split(",").map(entry_s => float(entry_s))))
 
-#let vec(..a) = math.vec(..a.pos().map(item => str(item)))
-
-#let vec_bytes(v) = bytes(v.children.map(item => item.text.replace("−","-")).join(","))
-#let bytes_vec(b) = vec(..str(b).split(",").map(entry_s => float(entry_s)))
+#let vec_bytes(v) = bytes(v.map(item => str(item).replace("−","-")).join(","))
+#let bytes_vec(b) = str(b).split(",").map(entry_s => float(entry_s))
 
 #let num_bytes(n) = bytes(str(n).replace("−","-"))
 #let bytes_num(b) = float(str(b))

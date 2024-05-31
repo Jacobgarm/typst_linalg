@@ -144,8 +144,8 @@
       let i2 = calc.rem(i + 1, len)
       let v1 = vertices.at(face.at(i))
       let v2 = vertices.at(face.at(i2))
-      let (x1, y1, z1, w1) = mat.mul_vec(ts, mat.vec(..v1, 1)).children.map(c => float(c.text))
-      let (x2, y2, z2, w2) = mat.mul_vec(ts, mat.vec(..v2, 1)).children.map(c => float(c.text))
+      let (x1, y1, z1, w1) = mat.mul_vec(ts, (..v1, 1))
+      let (x2, y2, z2, w2) = mat.mul_vec(ts, (..v2, 1))
 
       if (w1 >= near or w2 >= near) and w1 <= far and w2 <= far {
         // Find center point if one of the points is off-screen.
