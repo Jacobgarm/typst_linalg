@@ -115,6 +115,47 @@ impl Matrix {
         self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
     }
 
+    pub fn is_symmetric(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        };
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                if i != j && self[i][j] != self[j][i] {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    pub fn is_skew_symmetric(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        };
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                if self[i][j] != -self[j][i] {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+    pub fn is_diagonal(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        };
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                if i != j && self[i][j] != 0.0 {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
     pub fn transpose(&self) -> Self {
         let mut out = Matrix::zero(self.ncols(), self.nrows());
         for i in 0..self.nrows() {
