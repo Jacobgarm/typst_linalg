@@ -15,6 +15,6 @@ fn main() {
     };
     // let a = m.inverse();
     //let s = m.det();
-    let (Q, R) = m.QR().unwrap();
-    dbg!(Q, R);
+    // let (Q, R) = m.QR().unwrap();
+    // dbg!(Q, R);
 }
