@@ -384,7 +384,7 @@ impl Matrix {
         Ok(res)
     }
 
-    pub fn QR(&self) -> Result<(Matrix, Matrix), String> {
+    // pub fn QR(&self) -> Result<(Matrix, Matrix), String> {
         // if !self.is_square() {
         //     return Err("Matrix is not square".to_owned());
         // }
@@ -439,7 +439,7 @@ impl Matrix {
         // R = R.clone() * self.clone();
 
         // Ok((Q, R))
-    }
+    // }
 }
 
 impl Convertable for Matrix {
