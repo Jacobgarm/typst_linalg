@@ -1,3 +1,4 @@
+use std::fmt::Result;
 use std::ops::Neg;
 use std::str::FromStr;
 
@@ -186,6 +187,10 @@ impl Matrix {
             }
         }
         out
+    }
+
+    pub fn mul_vector(&self, v: Vector) -> Result<{
+        let res = Vec::new();
     }
 
     pub fn rowswap(&self, r1: usize, r2: usize) -> Result<Matrix, String> {
