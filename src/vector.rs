@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use std::vec;
 
 use crate::{common::*, Matrix};
 use crate::convert::Convertable;
@@ -14,6 +15,29 @@ impl std::ops::Add for Vector {
         let mut out = self.clone();
         for i in 0..self.dim() {
             out[i] += rhs[i];
+        }
+        out
+    }
+}
+
+impl std::ops::Sub for Vector {
+    type Output = Self;
+    fn sub(self, rhs: Vector) -> Self::Output {
+        let mut out = self.clone();
+        for i in 0..self.dim() {
+            out[i] -= rhs[i];
+        }
+        out
+    }
+}
+
+
+impl std::ops::Neg for Vector {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        let mut out = self.clone();
+        for i in 0..self.dim() {
+            out[i] = -out[i];
         }
         out
     }
@@ -48,7 +72,7 @@ impl Vector {
 
     pub fn normalised(&self) -> Vector {
         let mut out = self.clone();
-        out.scale(self.norm())
+        out.scale(1.0/self.norm())
     }
 
     pub fn outer_mul(&self, other: &Self) -> Matrix {
