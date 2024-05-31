@@ -1,4 +1,4 @@
-use crate::common::*;
+use crate::{common::*, Matrix};
 use crate::convert::Convertable;
 use std::str::FromStr;
 
@@ -37,8 +37,14 @@ impl Vector {
         self.entries.len()
     }
 
-    pub fn length(&self) -> f64 {
+    pub fn norm(&self) -> f64 {
         self.entries.iter().map(|x| x * x).sum::<f64>().sqrt()
+    }
+
+    pub fn outer_mul(&self, other: &Self) -> Matrix {
+        let self_mat = Matrix { rows: vec![self.entries.clone()] };
+        let other_mat = Matrix { rows: vec![other.entries.clone()] }.transpose();
+        self_mat * other_mat
     }
 }
 
