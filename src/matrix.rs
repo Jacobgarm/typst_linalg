@@ -1,5 +1,3 @@
-use std::borrow::BorrowMut;
-use std::ops::Neg;
 use std::str::FromStr;
 
 use crate::common::*;
@@ -196,6 +194,21 @@ impl Matrix {
             }
         }
         out
+    }
+
+    pub fn mul_vector(&self, v: Vector) -> Result<Vector, String> {
+        if v.dim() != self.ncols() {
+            return Err("Vector does nor have same dimension as matrix".to_owned());
+        }
+        let mut res = Vec::new();
+        for i in 0..self.nrows() {
+            let mut entry = 0.0;
+            for j in 0..self.ncols() {
+                entry += self[i][j] * v[j];
+            }
+            res.push(entry);
+        }
+        Ok(Vector { entries: res })
     }
 
     pub fn rowswap(&self, r1: usize, r2: usize) -> Result<Matrix, String> {

@@ -7,6 +7,7 @@ mod vector;
 
 use convert::Convertable;
 use matrix::*;
+use vector::*;
 
 initiate_protocol!();
 
@@ -71,5 +72,13 @@ pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Result<Vec
     let r1 = usize::from_bytes(r1_bytes)?;
     let r2 = usize::from_bytes(r2_bytes)?;
     let res = mat.rowswap(r1, r2)?;
+    Ok(res.to_bytes())
+}
+
+#[wasm_func]
+pub fn mul_vec(mat_bytes: &[u8], vec_bytes: &[u8]) -> Result<Vec<u8>, String> {
+    let mat = Matrix::from_bytes(mat_bytes)?;
+    let vec = Vector::from_bytes(vec_bytes)?;
+    let res = mat.mul_vector(vec)?;
     Ok(res.to_bytes())
 }
