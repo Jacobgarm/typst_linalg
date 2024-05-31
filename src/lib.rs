@@ -51,10 +51,19 @@ unary!(RREF, { |m: Matrix| m.RREF() });
 unary_err!(det, { |m: Matrix| m.det() });
 unary_err!(trace, { |m: Matrix| m.trace() });
 unary_err!(inverse, { |m: Matrix| m.inverse() });
+unary_err!(exp, { |m: Matrix| m.exp() });
 
 binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });
 binary!(sub, { |m1: Matrix, m2: Matrix| m1 - m2 });
 binary!(mul, { |m1: Matrix, m2: Matrix| m1 * m2 });
+
+#[wasm_func]
+pub fn pow(mat_bytes: &[u8], pow_bytes: &[u8]) -> Result<Vec<u8>, String> {
+    let mat = Matrix::from_bytes(mat_bytes)?;
+    let pow = i64::from_bytes(pow_bytes)?;
+    let res = mat.powi(pow)?;
+    Ok(res.to_bytes())
+}
 
 #[wasm_func]
 pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Result<Vec<u8>, String> {

@@ -117,6 +117,47 @@ impl Matrix {
         self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
     }
 
+    pub fn is_symmetric(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        };
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                if i != j && self[i][j] != self[j][i] {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    pub fn is_skew_symmetric(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        };
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                if self[i][j] != -self[j][i] {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+    pub fn is_diagonal(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        };
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                if i != j && self[i][j] != 0.0 {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
     pub fn transpose(&self) -> Self {
         let mut out = Matrix::zero(self.ncols(), self.nrows());
         for i in 0..self.nrows() {
@@ -131,7 +172,17 @@ impl Matrix {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-                out[j][i] *= scalar;
+                out[i][j] *= scalar;
+            }
+        }
+        out
+    }
+
+    fn hadamard(&self, rhs: Matrix) -> Self {
+        let mut out = self.clone();
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                out[i][j] *= rhs[i][j];
             }
         }
         out
@@ -280,13 +331,51 @@ impl Matrix {
             return Err("Matrix is not invertible".to_owned());
         }
         let augmented = self.augment_cols(Matrix::id(self.nrows())).unwrap();
-        dbg!(&augmented);
         let reduced = augmented.RREF();
         let mut inverse_rows = Vec::new();
         for row in &reduced.rows {
             inverse_rows.push(row[self.ncols()..].to_vec())
         }
         Ok(Matrix { rows: inverse_rows })
+    }
+
+    pub fn powi(&self, power: i64) -> Result<Matrix, String> {
+        if !self.is_square() {
+            return Err("Cannot take powers of non-square matrix".to_owned());
+        }
+        let mut mult = if power >= 0 {
+            self.clone()
+        } else {
+            self.inverse()?
+        };
+        let mut res = Matrix::id(self.nrows());
+        let abs_power = power.abs();
+        let mut pow2 = 1;
+        loop {
+            if abs_power & pow2 != 0 {
+                res = res * mult.clone();
+            }
+            pow2 <<= 1;
+            if pow2 > abs_power {
+                break;
+            }
+
+            mult = mult.clone() * mult.clone();
+        }
+
+        Ok(res)
+    }
+    pub fn exp(&self) -> Result<Matrix, String> {
+        if !self.is_square() {
+            return Err("Cannot exponentiate non-square matrix".to_owned());
+        }
+        let mut res = Matrix::id(self.nrows());
+        let mut mult = self.clone();
+        for k in 1..21 {
+            res = res + mult.clone().scale(1.0 / factorial(k) as f64);
+            mult = mult * self.clone();
+        }
+        Ok(res)
     }
 
     pub fn QR(&self) -> Result<(Matrix, Matrix), String> {

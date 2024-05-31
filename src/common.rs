@@ -18,3 +18,7 @@ pub fn truncate_zeroes(num_str: String) -> String {
     }
     num_str
 }
+
+pub fn factorial(num: i64) -> i64 {
+    (1..=num).product()
+}
