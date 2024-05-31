@@ -47,6 +47,7 @@ macro_rules! binary {
 unary!(neg, { |m: Matrix| -m });
 unary!(transpose, { |m: Matrix| m.transpose() });
 unary!(REF, { |m: Matrix| m.REF().0 });
+unary!(RREF, { |m: Matrix| m.RREF() });
 unary_err!(det, { |m: Matrix| m.det() });
 
 binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });

@@ -145,7 +145,7 @@ impl Matrix {
             return Err(format!("Row index exceeds last row"));
         }
         let mut out = self.clone();
-        out.rows[row] = out.rows[row].iter().map(|entry| entry * c).collect();
+        out[row] = out[row].iter().map(|entry| entry * c).collect();
         Ok(out)
     }
 
@@ -155,7 +155,7 @@ impl Matrix {
         }
         let mut out = self.clone();
         for i in 0..self.ncols() {
-            out.rows[r1][i] += c * out.rows[r2][i];
+            out[r1][i] += c * out[r2][i];
         }
         Ok(out)
     }
@@ -209,15 +209,13 @@ impl Matrix {
             for i in prow..rows {
                 if out.rows[i][pcol] != 0.0 {
                     leading_values.push(i);
-                    dbg!(prow, i, out.rows[i][pcol], out.rows[max_leading][pcol]);
-                    if out.rows[i][pcol].abs() > out.rows[max_leading][pcol].abs() {
+                    if out[i][pcol].abs() > out[max_leading][pcol].abs() {
                         max_leading = i;
                     }
                 }
             }
 
             if leading_values.is_empty() {
-                println!("continue");
                 pcol += 1;
                 continue;
             }
@@ -227,9 +225,9 @@ impl Matrix {
             }
 
             for i in (prow + 1)..rows {
-                let mult = out.rows[i][pcol] / out.rows[prow][pcol];
+                let mult = out[i][pcol] / out[prow][pcol];
                 out = out.rowadd(i, prow, -mult).unwrap();
-                out.rows[i][pcol] = 0.0;
+                out[i][pcol] = 0.0;
             }
 
             prow += 1;
@@ -242,14 +240,25 @@ impl Matrix {
         let (mut out, _) = self.REF();
         let rows = self.nrows();
         let cols = self.ncols();
+        let mut pcol = 0;
 
-        for i in 0..rows {
-            let row = &out[i];
-            if row.iter().all(|x| *x == 0.0) {
-                return out;
+        for row in 0..rows {
+            while out[row][pcol] == 0.0 {
+                pcol += 1;
+                if pcol >= cols {
+                    return out;
+                }
+            }
+
+            out = out.rowscale(row, 1.0/out[row][pcol]).unwrap();
+            out[row][pcol] = 1.0;
+
+            for i in 0..row {
+                out = out.rowadd(i, row, -out[i][pcol]).unwrap();
+                out[i][pcol] = 0.0;
             }
         }
-        (out)
+        out
     }
 }
 
