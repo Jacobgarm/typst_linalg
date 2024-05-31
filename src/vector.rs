@@ -4,8 +4,8 @@ use crate::{common::*, Matrix};
 use crate::convert::Convertable;
 
 #[derive(Debug, Clone, PartialEq)]
-struct Vector {
-    entries: Vec<f64>,
+pub struct Vector {
+    pub entries: Vec<f64>,
 }
 
 impl std::ops::Add for Vector {
@@ -42,9 +42,18 @@ impl Vector {
         self.entries.iter().map(|x| x * x).sum::<f64>().sqrt()
     }
 
+    pub fn scale(&self, c: f64) -> Vector {
+        Vector { entries: self.entries.iter().map(|x| x * c).collect() }
+    }
+
+    pub fn normalised(&self) -> Vector {
+        let mut out = self.clone();
+        out.scale(self.norm())
+    }
+
     pub fn outer_mul(&self, other: &Self) -> Matrix {
-        let self_mat = Matrix { rows: vec![self.entries.clone()] };
-        let other_mat = Matrix { rows: vec![other.entries.clone()] }.transpose();
+        let self_mat = Matrix { rows: vec![self.entries.clone()] }.transpose();
+        let other_mat = Matrix { rows: vec![other.entries.clone()] };
         self_mat * other_mat
     }
 }
