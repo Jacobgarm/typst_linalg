@@ -278,13 +278,51 @@ impl Matrix {
             return Err("Matrix is not invertible".to_owned());
         }
         let augmented = self.augment_cols(Matrix::id(self.nrows())).unwrap();
-        dbg!(&augmented);
         let reduced = augmented.RREF();
         let mut inverse_rows = Vec::new();
         for row in &reduced.rows {
             inverse_rows.push(row[self.ncols()..].to_vec())
         }
         Ok(Matrix { rows: inverse_rows })
+    }
+
+    pub fn powi(&self, power: i64) -> Result<Matrix, String> {
+        if !self.is_square() {
+            return Err("Cannot take powers of non-square matrix".to_owned());
+        }
+        let mut mult = if power >= 0 {
+            self.clone()
+        } else {
+            self.inverse()?
+        };
+        let mut res = Matrix::id(self.nrows());
+        let abs_power = power.abs();
+        let mut pow2 = 1;
+        loop {
+            if abs_power & pow2 != 0 {
+                res = res * mult.clone();
+            }
+            pow2 <<= 1;
+            if pow2 > abs_power {
+                break;
+            }
+
+            mult = mult.clone() * mult.clone();
+        }
+
+        Ok(res)
+    }
+    pub fn exp(&self) -> Result<Matrix, String> {
+        if !self.is_square() {
+            return Err("Cannot exponentiate non-square matrix".to_owned());
+        }
+        let mut res = Matrix::id(self.nrows());
+        let mut mult = self.clone();
+        for k in 1..21 {
+            res = res + mult.clone().scale(1.0 / factorial(k) as f64);
+            mult = mult * self.clone();
+        }
+        Ok(res)
     }
 }
 
