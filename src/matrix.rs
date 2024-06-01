@@ -70,6 +70,7 @@ impl std::ops::Sub for Matrix {
 impl std::ops::Mul for Matrix {
     type Output = Self;
     fn mul(self, rhs: Matrix) -> Self::Output {
+        assert_eq!(self.ncols(), rhs.nrows());
         let mut out = Matrix::zero(self.nrows(), rhs.ncols());
         for i in 0..self.nrows() {
             for j in 0..rhs.ncols() {
@@ -454,7 +455,7 @@ impl Matrix {
         Ok(res)
     }
 
-    pub fn householder_standard(v: Vector, wish_dim: usize) -> Matrix {
+    pub fn householder_standard(v: Vector) -> Matrix {
         let dim = v.dim();
         let mut e1 = Vector {
             entries: vec![0.0; dim],
@@ -473,22 +474,45 @@ impl Matrix {
         let mut p_matrices: Vec<Matrix> = vec![];
 
         for i in 0..cols {
-            let v = self.get_vector(0);
-            let p = Matrix::householder_standard(v, cols);
+            println!("At step {}!\ncurrently matrix is:\n{}\n", i, m);
+
+            if i > 0 {
+                println!("Before submatrix:\n{}", m);
+
+                m = m.submatrix(0, 0).unwrap();
+
+                println!("After submatrix:\n{}", m);
+            }
+            let v = m.get_vector(0);
+            let v_clone = v.clone();
+            let p = Matrix::householder_standard(v);
+
+            println!("Calculated p as\n{}", p);
             p_matrices.push(p.clone());
+
+            if i == cols - 1 {
+                println!("Done!");
+                continue;
+            }
             m = p * m;
+
+            println!("Multiplied p onto m and got:\n{}", m);
         }
         let num_matrices = p_matrices.len();
-        let mut Q = p_matrices[0].clone();
+        println!("{}", num_matrices);
+        let mut q = p_matrices[0].clone();
+        let dim = p_matrices[0].nrows();
         for i in 1..num_matrices {
-            Q = Q * p_matrices[i].clone();
+            q = q * Matrix::id(dim).embed_matrix(&p_matrices[i].clone(), i, i);
+            println!("Q is at step {}\n{}", i, q);
         }
-
-        let mut R = self.clone();
-        for i in 0..num_matrices {
-            R = p_matrices[i].clone() * R;
+        let mut r = Matrix::id(dim).embed_matrix(&p_matrices[num_matrices - 1].clone(), num_matrices - 1, num_matrices - 1);
+        for i in (0..num_matrices - 1).rev() {
+            r = r * Matrix::id(dim).embed_matrix(&p_matrices[i].clone(), i, i);
+            println!("R is at step {}\n{}", i, r);
         }
-        Ok((Q, R))
+        r = r * self.clone();
+        Ok((q, r))
     }
 }
 
