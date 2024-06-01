@@ -472,44 +472,33 @@ impl Matrix {
         let cols = self.ncols();
         let mut m = self.clone();
         let mut p_matrices: Vec<Matrix> = vec![];
+        let dim = self.nrows();
 
         for i in 0..cols {
-            println!("At step {}!\ncurrently matrix is:\n{}\n", i, m);
-
             if i > 0 {
-                println!("Before submatrix:\n{}", m);
-
                 m = m.submatrix(0, 0).unwrap();
-
-                println!("After submatrix:\n{}", m);
             }
             let v = m.get_vector(0);
             let v_clone = v.clone();
             let p = Matrix::householder_standard(v);
 
-            println!("Calculated p as\n{}", p);
-            p_matrices.push(p.clone());
+            let embedded_p = Matrix::id(dim).embed_matrix(&p.clone(), i, i);
+            p_matrices.push(embedded_p.clone());
 
             if i == cols - 1 {
-                println!("Done!");
                 continue;
             }
             m = p * m;
-
-            println!("Multiplied p onto m and got:\n{}", m);
         }
         let num_matrices = p_matrices.len();
-        println!("{}", num_matrices);
         let mut q = p_matrices[0].clone();
-        let dim = p_matrices[0].nrows();
         for i in 1..num_matrices {
-            q = q * Matrix::id(dim).embed_matrix(&p_matrices[i].clone(), i, i);
+            q = q * p_matrices[i].clone();
             println!("Q is at step {}\n{}", i, q);
         }
-        let mut r = Matrix::id(dim).embed_matrix(&p_matrices[num_matrices - 1].clone(), num_matrices - 1, num_matrices - 1);
+        let mut r = p_matrices[num_matrices - 1].clone();
         for i in (0..num_matrices - 1).rev() {
-            r = r * Matrix::id(dim).embed_matrix(&p_matrices[i].clone(), i, i);
-            println!("R is at step {}\n{}", i, r);
+            r = r * p_matrices[i].clone();
         }
         r = r * self.clone();
         Ok((q, r))

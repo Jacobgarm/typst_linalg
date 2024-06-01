@@ -28,7 +28,7 @@ fn main() {
     // println!("{}", I.embed_matrix(&m, 1, 1));
     // let a = m.inverse();
     //let s = m.det();
-    let (Q, R) = I.QR().unwrap();
+    let (Q, R) = M.QR().unwrap();
     println!("Q:\n{},\nR:\n{}", Q , R);
     println!("Product is:\n{}", Q * R);
 }
