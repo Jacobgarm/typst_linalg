@@ -14,11 +14,13 @@ fn main() {
            vec![1.0, -1.0, 0.0]
         ],
     };
+    let I = Matrix::id(5);
     let v = Vector {
         entries : vec![1.0; 4]
     };
+    println!("{}", I.embed_matrix(&m, 1, 1));
     // let a = m.inverse();
     //let s = m.det();
-    let (Q, R) = m.QR().unwrap();
-    dbg!(Q , R);
+    // let (Q, R) = m.QR().unwrap();
+    // dbg!(Q , R);
 }

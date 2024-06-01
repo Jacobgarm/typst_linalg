@@ -1,3 +1,4 @@
+use core::fmt;
 use std::str::FromStr;
 
 use crate::common::*;
@@ -7,6 +8,24 @@ use crate::vector::Vector;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix {
     pub rows: Vec<Vec<f64>>,
+}
+
+impl std::fmt::Display for Matrix {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut res = "".to_owned();
+        for i in 0..self.nrows() {
+            res.push_str("[");
+            for j in 0..self.ncols() {
+                res.push_str(self[i][j].clone().to_string().as_str());
+                if j == self.ncols() - 1 {
+                    continue;
+                }
+                res.push_str(", ")
+            }
+            res.push_str("]\n");
+        }
+        write!(f, "{}", res)
+    }
 }
 
 impl std::ops::Add for Matrix {
@@ -92,7 +111,7 @@ impl Matrix {
         Matrix::filled(rows, cols, 0.0)
     }
 
-    fn id(dim: usize) -> Self {
+    pub fn id(dim: usize) -> Self {
         let mut out = Matrix::zero(dim, dim);
         for i in 0..dim {
             out[i][i] = 1.0;
@@ -263,6 +282,16 @@ impl Matrix {
         Ok(out)
     }
 
+    pub fn embed_matrix(&self, other: &Self, row: usize, col: usize) -> Matrix {
+        let mut out = self.clone();
+        for i in 0..other.nrows() {
+            for j in 0..other.ncols() {
+                out[i + row][j + col] = other[i][j].clone();
+            }
+        }
+        out
+    }
+
     fn augment_cols(&self, right: Matrix) -> Result<Matrix, String> {
         if self.nrows() != right.nrows() {
             return Err("Cannot horizontally augment matrices of different heights".to_owned());
@@ -425,7 +454,7 @@ impl Matrix {
         Ok(res)
     }
 
-    pub fn householder_standard(v: Vector) -> Matrix {
+    pub fn householder_standard(v: Vector, wish_dim: usize) -> Matrix {
         let dim = v.dim();
         let mut e1 = Vector {
             entries: vec![0.0; dim],
@@ -444,8 +473,8 @@ impl Matrix {
         let mut p_matrices: Vec<Matrix> = vec![];
 
         for i in 0..cols {
-            let v = self.get_vector(i);
-            let p = Matrix::householder_standard(v);
+            let v = self.get_vector(0);
+            let p = Matrix::householder_standard(v, cols);
             p_matrices.push(p.clone());
             m = p * m;
         }
