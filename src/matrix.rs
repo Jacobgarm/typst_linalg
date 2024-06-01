@@ -122,8 +122,31 @@ impl Matrix {
 
     fn givens_rotation(dim: usize, i: usize, j: usize, angle: f64) -> Self {
         let mut out = Matrix::id(dim);
+        let c = angle.cos();
+        let s = angle.cos();
+        out[i][i] = c;
+        out[j][j] = c;
+        out[i][j] = s;
+        out[j][i] = -s;
         out
     }
+
+    pub fn rotation_2d(angle: f64) -> Self {
+        Matrix::givens_rotation(2, 1, 0, angle)
+    }
+
+    pub fn rotation_x_3d(angle: f64) -> Self {
+        Matrix::givens_rotation(3, 2, 1, angle)
+    }
+
+    pub fn rotation_y_3d(angle: f64) -> Self {
+        Matrix::givens_rotation(3, 2, 0, angle)
+    }
+
+    pub fn rotation_z_3d(angle: f64) -> Self {
+        Matrix::givens_rotation(3, 1, 0, angle)
+    }
+
     fn nrows(&self) -> usize {
         self.rows.len()
     }
@@ -510,7 +533,11 @@ impl Matrix {
             q = q * Matrix::id(dim).embed_matrix(&p_matrices[i].clone(), i, i);
             println!("Q is at step {}\n{}", i, q);
         }
-        let mut r = Matrix::id(dim).embed_matrix(&p_matrices[num_matrices - 1].clone(), num_matrices - 1, num_matrices - 1);
+        let mut r = Matrix::id(dim).embed_matrix(
+            &p_matrices[num_matrices - 1].clone(),
+            num_matrices - 1,
+            num_matrices - 1,
+        );
         for i in (0..num_matrices - 1).rev() {
             r = r * Matrix::id(dim).embed_matrix(&p_matrices[i].clone(), i, i);
             println!("R is at step {}\n{}", i, r);
