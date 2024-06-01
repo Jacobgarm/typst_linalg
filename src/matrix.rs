@@ -77,7 +77,6 @@ impl std::ops::IndexMut<usize> for Matrix {
     }
 }
 
-#[allow(dead_code)]
 impl Matrix {
     fn filled(rows: usize, cols: usize, value: f64) -> Self {
         let mut out: Vec<Vec<f64>> = Vec::new();

@@ -1,5 +1,3 @@
-
-#[allow(dead_code)]
 pub trait Convertable: Sized {
     fn to_bytes(&self) -> Vec<u8>;
 
