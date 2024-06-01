@@ -99,7 +99,7 @@ impl std::ops::IndexMut<usize> for Matrix {
 
 #[allow(dead_code)]
 impl Matrix {
-    fn filled(rows: usize, cols: usize, value: f64) -> Self {
+    pub fn filled(rows: usize, cols: usize, value: f64) -> Self {
         let mut out: Vec<Vec<f64>> = Vec::new();
         let zero_vec = vec![value; cols];
         for _ in 0..rows {
@@ -108,7 +108,7 @@ impl Matrix {
         Matrix { rows: out }
     }
 
-    fn zero(rows: usize, cols: usize) -> Self {
+    pub fn zero(rows: usize, cols: usize) -> Self {
         Matrix::filled(rows, cols, 0.0)
     }
 
@@ -491,8 +491,7 @@ impl Matrix {
         let sgn = v[0].signum();
         let u = v.clone() + e1.scale(sgn).scale(v.norm());
         let n = u.normalised();
-        let beta = 2.0 / (n.inner(&n));
-        Matrix::id(dim) - n.outer_mul(&n).scale(beta)
+        Matrix::id(dim) - n.outer_mul(&n).scale(2.0)
     }
 
     pub fn QR(&self) -> Result<(Matrix, Matrix), String> {
@@ -508,7 +507,10 @@ impl Matrix {
             let v = m.get_vector(0);
             let v_clone = v.clone();
             let p = Matrix::householder_standard(v);
-
+            // if p.ncols() <= 2 {
+            //     break;
+            // }
+            println!("Current p matrix is:\n{}", p);
             let embedded_p = Matrix::id(dim).embed_matrix(&p.clone(), i, i);
             p_matrices.push(embedded_p.clone());
 
@@ -521,7 +523,7 @@ impl Matrix {
         let mut q = p_matrices[0].clone();
         for i in 1..num_matrices {
             q = q * p_matrices[i].clone();
-            println!("Q is at step {}\n{}", i, q);
+            // println!("Q is at step {}\n{}", i, q);
         }
         let mut r = p_matrices[num_matrices - 1].clone();
         for i in (0..num_matrices - 1).rev() {
