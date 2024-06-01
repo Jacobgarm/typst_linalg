@@ -1,3 +1,4 @@
+use num::complex::c64;
 mod common;
 mod convert;
 mod matrix;
@@ -32,7 +33,7 @@ fn main() {
     let mut I = Matrix::id(15);
     let A = Matrix::filled(12, 14, 1.0);
     let v = Vector {
-        entries: vec![1.0; 4],
+        entries: vec![2.0; 4],
     };
     // println!("{}", I.embed_matrix(&m, 1, 1));
     // let a = m.inverse();
@@ -41,4 +42,11 @@ fn main() {
     println!("Q:\n{},\nR:\n{}", Q, R);
     println!("Product is:\n{}", Q * R);
     println!("Rotation:\n{}", Matrix::rotation_y_3d(3.141592));
+    let cv1 = Vector {
+        entries: vec![c64(1.0, 2.0); 3],
+    };
+    let cv2 = Vector {
+        entries: vec![c64(1.0, -2.0); 3],
+    };
+    println!("Inner {:?}", cv1.inner(&cv2))
 }
