@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub fn truncate_zeroes(num_str: String) -> String {
     let mut sep_found = false;
     let mut nonzero_found = false;
@@ -22,3 +24,6 @@ pub fn truncate_zeroes(num_str: String) -> String {
 pub fn factorial(num: i64) -> i64 {
     (1..=num).product()
 }
+
+trait Scalar: num_traits::NumAssign + Display {}
+impl<T: num_traits::NumAssign + Display> Scalar for T {}

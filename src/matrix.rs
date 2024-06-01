@@ -119,6 +119,10 @@ impl Matrix {
         out
     }
 
+    fn givens_rotation(dim: usize, i: usize, j: usize, angle: f64) -> Self {
+        let mut out = Matrix::id(dim);
+        out
+    }
     fn nrows(&self) -> usize {
         self.rows.len()
     }
