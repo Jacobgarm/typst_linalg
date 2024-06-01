@@ -163,7 +163,7 @@ impl Matrix {
         self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
     }
 
-    fn get_vector(&self, col: usize) -> Vector {
+    fn get_vector(&self, col: usize) -> Vector<f64> {
         let rows = self.nrows();
         let mut out = Vector {
             entries: vec![0.0; rows],
@@ -245,7 +245,7 @@ impl Matrix {
         out
     }
 
-    pub fn mul_vector(&self, v: Vector) -> Result<Vector, String> {
+    pub fn mul_vector(&self, v: Vector<f64>) -> Result<Vector<f64>, String> {
         if v.dim() != self.ncols() {
             return Err("Vector does nor have same dimension as matrix".to_owned());
         }
@@ -482,7 +482,7 @@ impl Matrix {
         Ok(res)
     }
 
-    pub fn householder_standard(v: Vector) -> Matrix {
+    pub fn householder_standard(v: Vector<f64>) -> Matrix {
         let dim = v.dim();
         let mut e1 = Vector {
             entries: vec![0.0; dim],
@@ -492,6 +492,7 @@ impl Matrix {
         let u = v.clone() + e1.scale(sgn).scale(v.norm());
         let n = u.normalised();
         let beta = 2.0 / (n.inner(&n));
+        println!("BETA{}", beta);
         Matrix::id(dim) - n.outer_mul(&n).scale(beta)
     }
 
