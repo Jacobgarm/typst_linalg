@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
+#![feature(specialization)]
 use fraction::Fraction;
 
 mod common;
@@ -8,6 +9,7 @@ mod matrix;
 mod vector;
 
 use matrix::*;
+use num::Zero;
 use vector::*;
 
 #[allow(unused)]
@@ -54,6 +56,9 @@ fn main() {
         entries: vec![Fraction::new(3u64, 4u64); 3],
     };
     println!("Inner {}", fv1.inner(&fv2));
-    let A = Matrix::filled(2, 2, Fraction::from(0.25));
-    println!("{}", A.clone() * A)
+    let mut A = Matrix::filled(2, 2, Fraction::from(0.25));
+    A[0][0] = Fraction::zero();
+    let mut B = Matrix::filled(2, 2, 0.25_f64);
+    B[0][0] = 0.1;
+    println!("{}", B.REF().0);
 }

@@ -12,6 +12,10 @@ where
     pub rows: Vec<Vec<T>>,
 }
 
+pub trait REFable: Sized {
+    fn REF(&self) -> (Self, usize);
+}
+
 impl<T: Scalar> std::fmt::Display for Matrix<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut res = "".to_owned();
@@ -321,7 +325,88 @@ impl<T: Scalar> Matrix<T> {
         Ok(trace)
     }
 }
+impl<T: Scalar> REFable for Matrix<T> {
+    default fn REF(&self) -> (Self, usize) {
+        let mut out = self.clone();
+        let rows = self.nrows();
+        let cols = self.ncols();
+        let mut prow = 0;
+        let mut swaps = 0;
 
+        for pcol in 0..cols {
+            if out[prow][pcol].is_zero() {
+                let mut pivot = false;
+                for i in prow + 1..rows {
+                    if !out[i][pcol].is_zero() {
+                        out = out.rowswap(prow, i).unwrap();
+                        swaps += 1;
+                        prow = i;
+                        pivot = true;
+                        break;
+                    }
+                }
+                if !pivot {
+                    continue;
+                }
+            }
+
+            if prow == rows - 1 {
+                break;
+            }
+
+            for i in prow + 1..rows {
+                out = out
+                    .rowadd(i, prow, -out[i][pcol] / out[prow][pcol])
+                    .unwrap();
+            }
+        }
+        (out, swaps)
+    }
+}
+
+impl REFable for Matrix<f64> {
+    fn REF(&self) -> (Self, usize) {
+        let mut out = self.clone();
+        let rows = self.nrows();
+        let cols = self.ncols();
+        let mut prow = 0;
+        let mut pcol = 0;
+        let mut swaps = 0;
+
+        while prow < rows && pcol < cols {
+            let mut leading_values = vec![];
+            let mut max_leading = prow;
+
+            for i in prow..rows {
+                if out.rows[i][pcol] != 0.0 {
+                    leading_values.push(i);
+                    if out[i][pcol].abs() > out[max_leading][pcol].abs() {
+                        max_leading = i;
+                    }
+                }
+            }
+
+            if leading_values.is_empty() {
+                pcol += 1;
+                continue;
+            }
+            if prow != max_leading {
+                out = out.rowswap(prow, max_leading).unwrap();
+                swaps += 1
+            }
+
+            for i in (prow + 1)..rows {
+                let mult = out[i][pcol] / out[prow][pcol];
+                out = out.rowadd(i, prow, -mult).unwrap();
+                out[i][pcol] = 0.0;
+            }
+
+            prow += 1;
+            pcol += 1;
+        }
+        (out, swaps)
+    }
+}
 impl Matrix<f64> {
     fn givens_rotation(dim: usize, i: usize, j: usize, angle: f64) -> Self {
         let mut out = Matrix::id(dim);
@@ -364,48 +449,6 @@ impl Matrix<f64> {
             determinant *= mat_ref[i][i];
         }
         Ok((-1.0_f64).powi(swaps as i32) * determinant)
-    }
-
-    pub fn REF(&self) -> (Self, usize) {
-        let mut out = self.clone();
-        let rows = self.nrows();
-        let cols = self.ncols();
-        let mut prow = 0;
-        let mut pcol = 0;
-        let mut swaps = 0;
-
-        while prow < rows && pcol < cols {
-            let mut leading_values = vec![];
-            let mut max_leading = prow;
-
-            for i in prow..rows {
-                if out.rows[i][pcol] != 0.0 {
-                    leading_values.push(i);
-                    if out[i][pcol].abs() > out[max_leading][pcol].abs() {
-                        max_leading = i;
-                    }
-                }
-            }
-
-            if leading_values.is_empty() {
-                pcol += 1;
-                continue;
-            }
-            if prow != max_leading {
-                out = out.rowswap(prow, max_leading).unwrap();
-                swaps += 1
-            }
-
-            for i in (prow + 1)..rows {
-                let mult = out[i][pcol] / out[prow][pcol];
-                out = out.rowadd(i, prow, -mult).unwrap();
-                out[i][pcol] = 0.0;
-            }
-
-            prow += 1;
-            pcol += 1;
-        }
-        (out, swaps)
     }
 
     pub fn RREF(&self) -> Self {

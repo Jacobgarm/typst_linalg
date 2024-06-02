@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
+#![feature(specialization)]
 use wasm_minimal_protocol::*;
 
 mod common;
