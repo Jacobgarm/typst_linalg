@@ -507,9 +507,10 @@ impl Matrix {
             let v = m.get_vector(0);
             let v_clone = v.clone();
             let p = Matrix::householder_standard(v);
-            // if p.ncols() <= 2 {
-            //     break;
-            // }
+            // Fix for now, since something happens that shouldn't happen if not. Slight undershoot, but it generally works.
+            if p.ncols() <= 2 {
+                break;
+            }
             println!("Current p matrix is:\n{}", p);
             let embedded_p = Matrix::id(dim).embed_matrix(&p.clone(), i, i);
             p_matrices.push(embedded_p.clone());
