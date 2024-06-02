@@ -26,7 +26,16 @@ pub fn factorial(num: i64) -> i64 {
 }
 
 pub trait Scalar:
-    num_traits::NumAssign + Display + Copy + std::ops::Neg<Output = Self> + FromStr
+    num_traits::NumAssign + Display + Copy + std::ops::Neg<Output = Self> + FromStr + std::iter::Sum
 {
 }
-impl<T: num_traits::NumAssign + Display + Copy + std::ops::Neg<Output = T> + FromStr> Scalar for T {}
+impl<
+        T: num_traits::NumAssign
+            + Display
+            + Copy
+            + std::ops::Neg<Output = T>
+            + FromStr
+            + std::iter::Sum,
+    > Scalar for T
+{
+}

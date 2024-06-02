@@ -1,16 +1,18 @@
 use core::fmt;
-use std::str::FromStr;
 
 use crate::common::*;
 use crate::convert::Convertable;
 use crate::vector::Vector;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Matrix {
-    pub rows: Vec<Vec<f64>>,
+pub struct Matrix<T>
+where
+    T: Scalar,
+{
+    pub rows: Vec<Vec<T>>,
 }
 
-impl std::fmt::Display for Matrix {
+impl<T: Scalar> std::fmt::Display for Matrix<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut res = "".to_owned();
         for i in 0..self.nrows() {
@@ -28,9 +30,9 @@ impl std::fmt::Display for Matrix {
     }
 }
 
-impl std::ops::Add for Matrix {
+impl<T: Scalar> std::ops::Add for Matrix<T> {
     type Output = Self;
-    fn add(self, rhs: Matrix) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
@@ -41,22 +43,22 @@ impl std::ops::Add for Matrix {
     }
 }
 
-impl std::ops::Neg for Matrix {
+impl<T: Scalar> std::ops::Neg for Matrix<T> {
     type Output = Self;
     fn neg(self) -> Self::Output {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-                out[i][j] *= -1.0;
+                out[i][j] *= -T::one();
             }
         }
         out
     }
 }
 
-impl std::ops::Sub for Matrix {
+impl<T: Scalar> std::ops::Sub for Matrix<T> {
     type Output = Self;
-    fn sub(self, rhs: Matrix) -> Self::Output {
+    fn sub(self, rhs: Self) -> Self::Output {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
@@ -67,9 +69,9 @@ impl std::ops::Sub for Matrix {
     }
 }
 
-impl std::ops::Mul for Matrix {
+impl<T: Scalar> std::ops::Mul for Matrix<T> {
     type Output = Self;
-    fn mul(self, rhs: Matrix) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         assert_eq!(self.ncols(), rhs.nrows());
         let mut out = Matrix::zero(self.nrows(), rhs.ncols());
         for i in 0..self.nrows() {
@@ -83,69 +85,21 @@ impl std::ops::Mul for Matrix {
     }
 }
 
-impl std::ops::Index<usize> for Matrix {
-    type Output = Vec<f64>;
+impl<T: Scalar> std::ops::Index<usize> for Matrix<T> {
+    type Output = Vec<T>;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.rows[index]
     }
 }
 
-impl std::ops::IndexMut<usize> for Matrix {
+impl<T: Scalar> std::ops::IndexMut<usize> for Matrix<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.rows[index]
     }
 }
 
-impl Matrix {
-    pub fn filled(rows: usize, cols: usize, value: f64) -> Self {
-        let mut out: Vec<Vec<f64>> = Vec::new();
-        let zero_vec = vec![value; cols];
-        for _ in 0..rows {
-            out.push(zero_vec.clone());
-        }
-        Matrix { rows: out }
-    }
-
-    pub fn zero(rows: usize, cols: usize) -> Self {
-        Matrix::filled(rows, cols, 0.0)
-    }
-
-    pub fn id(dim: usize) -> Self {
-        let mut out = Matrix::zero(dim, dim);
-        for i in 0..dim {
-            out[i][i] = 1.0;
-        }
-        out
-    }
-
-    fn givens_rotation(dim: usize, i: usize, j: usize, angle: f64) -> Self {
-        let mut out = Matrix::id(dim);
-        let c = angle.cos();
-        let s = angle.sin();
-        out[i][i] = c;
-        out[j][j] = c;
-        out[i][j] = s;
-        out[j][i] = -s;
-        out
-    }
-
-    pub fn rotation_2d(angle: f64) -> Self {
-        Matrix::givens_rotation(2, 1, 0, angle)
-    }
-
-    pub fn rotation_x_3d(angle: f64) -> Self {
-        Matrix::givens_rotation(3, 2, 1, angle)
-    }
-
-    pub fn rotation_y_3d(angle: f64) -> Self {
-        Matrix::givens_rotation(3, 2, 0, angle)
-    }
-
-    pub fn rotation_z_3d(angle: f64) -> Self {
-        Matrix::givens_rotation(3, 1, 0, angle)
-    }
-
+impl<T: Scalar> Matrix<T> {
     fn nrows(&self) -> usize {
         self.rows.len()
     }
@@ -158,17 +112,52 @@ impl Matrix {
         self.nrows() == self.ncols()
     }
 
-    fn is_invertible(&self) -> bool {
-        self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
+    pub fn filled(rows: usize, cols: usize, value: T) -> Self {
+        let mut out: Vec<Vec<T>> = Vec::new();
+        let filled_row = vec![value; cols];
+        for _ in 0..rows {
+            out.push(filled_row.clone());
+        }
+        Matrix { rows: out }
     }
 
-    fn get_vector(&self, col: usize) -> Vector<f64> {
+    pub fn zero(rows: usize, cols: usize) -> Self {
+        Matrix::filled(rows, cols, T::zero())
+    }
+
+    pub fn id(dim: usize) -> Self {
+        let mut out = Matrix::zero(dim, dim);
+        for i in 0..dim {
+            out[i][i] = T::one();
+        }
+        out
+    }
+
+    fn get_vector(&self, col: usize) -> Vector<T> {
         let rows = self.nrows();
-        let mut out = Vector {
-            entries: vec![0.0; rows],
-        };
+        let mut out = Vector::zero(rows);
         for i in 0..rows {
             out[i] = self[i][col];
+        }
+        out
+    }
+
+    pub fn transpose(&self) -> Self {
+        let mut out = Matrix::zero(self.ncols(), self.nrows());
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                out[j][i] = self[i][j];
+            }
+        }
+        out
+    }
+
+    fn scale(&self, scalar: T) -> Self {
+        let mut out = self.clone();
+        for i in 0..self.nrows() {
+            for j in 0..self.ncols() {
+                out[i][j] *= scalar;
+            }
         }
         out
     }
@@ -200,13 +189,14 @@ impl Matrix {
         }
         true
     }
+
     pub fn is_diagonal(&self) -> bool {
         if !self.is_square() {
             return false;
         };
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
-                if i != j && self[i][j] != 0.0 {
+                if i != j && !self[i][j].is_zero() {
                     return false;
                 }
             }
@@ -214,27 +204,55 @@ impl Matrix {
         true
     }
 
-    pub fn transpose(&self) -> Self {
-        let mut out = Matrix::zero(self.ncols(), self.nrows());
-        for i in 0..self.nrows() {
-            for j in 0..self.ncols() {
-                out[j][i] = self[i][j];
-            }
+    pub fn mul_vector(&self, v: Vector<T>) -> Result<Vector<T>, String> {
+        if v.dim() != self.ncols() {
+            return Err("Vector does nor have same dimension as matrix".to_owned());
         }
-        out
+        let mut res = Vec::new();
+        for i in 0..self.nrows() {
+            let mut entry = T::zero();
+            for j in 0..self.ncols() {
+                entry += self[i][j] * v[j];
+            }
+            res.push(entry);
+        }
+        Ok(Vector { entries: res })
     }
 
-    fn scale(&self, scalar: f64) -> Self {
+    pub fn rowswap(&self, r1: usize, r2: usize) -> Result<Self, String> {
+        if r1 >= self.nrows() || r2 >= self.nrows() {
+            return Err("Row index exceeds last row".to_owned());
+        }
         let mut out = self.clone();
-        for i in 0..self.nrows() {
-            for j in 0..self.ncols() {
-                out[i][j] *= scalar;
-            }
-        }
-        out
+        out.rows.swap(r1, r2);
+        Ok(out)
     }
 
-    fn hadamard(&self, rhs: Matrix) -> Self {
+    pub fn rowscale(&self, row: usize, c: T) -> Result<Self, String> {
+        if row >= self.nrows() {
+            return Err("Row index exceeds last row".to_owned());
+        }
+        let mut out = self.clone();
+        out[row] = out[row].iter().map(|entry| *entry * c).collect();
+        Ok(out)
+    }
+
+    pub fn rowadd(&self, r1: usize, r2: usize, c: T) -> Result<Self, String> {
+        if r1 >= self.nrows() && r2 >= self.nrows() {
+            return Err("Row index exceeds last row".to_owned());
+        }
+        if r1 == r2 {
+            return Err("Cannot add a row to itself".to_owned());
+        }
+        let mut out = self.clone();
+        let addend = out[r2].clone();
+        for i in 0..self.ncols() {
+            out[r1][i] += c * addend[i];
+        }
+        Ok(out)
+    }
+
+    fn hadamard(&self, rhs: Self) -> Self {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
@@ -244,58 +262,14 @@ impl Matrix {
         out
     }
 
-    pub fn mul_vector(&self, v: Vector<f64>) -> Result<Vector<f64>, String> {
-        if v.dim() != self.ncols() {
-            return Err("Vector does nor have same dimension as matrix".to_owned());
-        }
-        let mut res = Vec::new();
-        for i in 0..self.nrows() {
-            let mut entry = 0.0;
-            for j in 0..self.ncols() {
-                entry += self[i][j] * v[j];
-            }
-            res.push(entry);
-        }
-        Ok(Vector { entries: res })
-    }
-
-    pub fn rowswap(&self, r1: usize, r2: usize) -> Result<Matrix, String> {
-        if r1 >= self.nrows() || r2 >= self.nrows() {
-            return Err("Row index exceeds last row".to_owned());
-        }
-        let mut out = self.clone();
-        out.rows.swap(r1, r2);
-        Ok(out)
-    }
-
-    pub fn rowscale(&self, row: usize, c: f64) -> Result<Matrix, String> {
-        if row >= self.nrows() {
-            return Err("Row index exceeds last row".to_owned());
-        }
-        let mut out = self.clone();
-        out[row] = out[row].iter().map(|entry| entry * c).collect();
-        Ok(out)
-    }
-
-    pub fn rowadd(&self, r1: usize, r2: usize, c: f64) -> Result<Matrix, String> {
-        if r1 >= self.nrows() && r2 >= self.nrows() {
-            return Err("Row index exceeds last row".to_owned());
-        }
-        let mut out = self.clone();
-        for i in 0..self.ncols() {
-            out[r1][i] += c * out[r2][i];
-        }
-        Ok(out)
-    }
-
-    pub fn submatrix(&self, row: usize, col: usize) -> Result<Matrix, String> {
-        let mut out = Matrix { rows: vec![] };
+    pub fn submatrix(&self, row: usize, col: usize) -> Result<Self, String> {
         if row >= self.nrows() {
             return Err("Cannot remove row that does not exist".to_owned());
         }
         if col >= self.ncols() {
             return Err("Cannot remove column that does not exist".to_owned());
         }
+        let mut out = Matrix { rows: vec![] };
         for i in 0..self.nrows() {
             if i == row {
                 continue;
@@ -307,7 +281,7 @@ impl Matrix {
         Ok(out)
     }
 
-    pub fn embed_matrix(&self, other: &Self, row: usize, col: usize) -> Matrix {
+    pub fn embed_matrix(&self, other: &Self, row: usize, col: usize) -> Self {
         let mut out = self.clone();
         for i in 0..other.nrows() {
             for j in 0..other.ncols() {
@@ -317,7 +291,7 @@ impl Matrix {
         out
     }
 
-    fn augment_cols(&self, right: Matrix) -> Result<Matrix, String> {
+    fn augment_cols(&self, right: &Self) -> Result<Self, String> {
         if self.nrows() != right.nrows() {
             return Err("Cannot horizontally augment matrices of different heights".to_owned());
         }
@@ -328,7 +302,7 @@ impl Matrix {
         Ok(augmented)
     }
 
-    fn augment_rows(&self, below: Matrix) -> Result<Matrix, String> {
+    fn augment_rows(&self, below: &Self) -> Result<Self, String> {
         if self.ncols() != below.ncols() {
             return Err("Cannot vertically augment matrices of different widths".to_owned());
         }
@@ -339,12 +313,45 @@ impl Matrix {
         Ok(augmented)
     }
 
-    pub fn trace(&self) -> Result<f64, String> {
+    pub fn trace(&self) -> Result<T, String> {
         if !self.is_square() {
             return Err("Cannot compute trace of non-square matrix".to_owned());
         }
         let trace = self.rows.iter().enumerate().map(|(i, row)| row[i]).sum();
         Ok(trace)
+    }
+}
+
+impl Matrix<f64> {
+    fn givens_rotation(dim: usize, i: usize, j: usize, angle: f64) -> Self {
+        let mut out = Matrix::id(dim);
+        let c = angle.cos();
+        let s = angle.sin();
+        out[i][i] = c;
+        out[j][j] = c;
+        out[i][j] = s;
+        out[j][i] = -s;
+        out
+    }
+
+    pub fn rotation_2d(angle: f64) -> Self {
+        Matrix::givens_rotation(2, 1, 0, angle)
+    }
+
+    pub fn rotation_x_3d(angle: f64) -> Self {
+        Matrix::givens_rotation(3, 2, 1, angle)
+    }
+
+    pub fn rotation_y_3d(angle: f64) -> Self {
+        Matrix::givens_rotation(3, 2, 0, angle)
+    }
+
+    pub fn rotation_z_3d(angle: f64) -> Self {
+        Matrix::givens_rotation(3, 1, 0, angle)
+    }
+
+    fn is_invertible(&self) -> bool {
+        self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
     }
 
     pub fn det(&self) -> Result<f64, String> {
@@ -359,7 +366,7 @@ impl Matrix {
         Ok((-1.0_f64).powi(swaps as i32) * determinant)
     }
 
-    pub fn REF(&self) -> (Matrix, usize) {
+    pub fn REF(&self) -> (Self, usize) {
         let mut out = self.clone();
         let rows = self.nrows();
         let cols = self.ncols();
@@ -401,7 +408,7 @@ impl Matrix {
         (out, swaps)
     }
 
-    pub fn RREF(&self) -> Matrix {
+    pub fn RREF(&self) -> Self {
         let (mut out, _) = self.REF();
         let rows = self.nrows();
         let cols = self.ncols();
@@ -426,11 +433,11 @@ impl Matrix {
         out
     }
 
-    pub fn inverse(&self) -> Result<Matrix, String> {
+    pub fn inverse(&self) -> Result<Self, String> {
         if !self.is_invertible() {
             return Err("Matrix is not invertible".to_owned());
         }
-        let augmented = self.augment_cols(Matrix::id(self.nrows())).unwrap();
+        let augmented = self.augment_cols(&Matrix::id(self.nrows())).unwrap();
         let reduced = augmented.RREF();
         let mut inverse_rows = Vec::new();
         for row in &reduced.rows {
@@ -439,7 +446,7 @@ impl Matrix {
         Ok(Matrix { rows: inverse_rows })
     }
 
-    pub fn powi(&self, power: i64) -> Result<Matrix, String> {
+    pub fn powi(&self, power: i64) -> Result<Self, String> {
         if !self.is_square() {
             return Err("Cannot take powers of non-square matrix".to_owned());
         }
@@ -466,7 +473,7 @@ impl Matrix {
         Ok(res)
     }
 
-    pub fn exp(&self) -> Result<Matrix, String> {
+    pub fn exp(&self) -> Result<Self, String> {
         if !self.is_square() {
             return Err("Cannot exponentiate non-square matrix".to_owned());
         }
@@ -479,7 +486,7 @@ impl Matrix {
         Ok(res)
     }
 
-    pub fn householder_standard(v: Vector<f64>) -> Matrix {
+    pub fn householder_standard(v: Vector<f64>) -> Self {
         let dim = v.dim();
         let mut e1 = Vector {
             entries: vec![0.0; dim],
@@ -491,10 +498,10 @@ impl Matrix {
         Matrix::id(dim) - n.outer_mul(&n).scale(2.0)
     }
 
-    pub fn QR(&self) -> Result<(Matrix, Matrix), String> {
+    pub fn QR(&self) -> Result<(Self, Self), String> {
         let cols = self.ncols();
         let mut m = self.clone();
-        let mut p_matrices: Vec<Matrix> = vec![];
+        let mut p_matrices: Vec<Matrix<f64>> = vec![];
         let dim = self.nrows();
 
         for i in 0..cols {
@@ -531,19 +538,19 @@ impl Matrix {
     }
 }
 
-impl Convertable for Matrix {
+impl<T: Scalar> Convertable for Matrix<T> {
     fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let s = std::str::from_utf8(bytes).unwrap().to_owned();
 
-        let mut rows: Vec<Vec<f64>> = Vec::new();
+        let mut rows: Vec<Vec<T>> = Vec::new();
         let mut row_length = usize::MAX;
         for row_str in s.split(';') {
             let mut row = Vec::new();
             for entry in row_str.split(',') {
-                let res_float = f64::from_str(entry);
+                let res_float = T::from_str(entry);
                 match res_float {
                     Ok(float) => row.push(float),
-                    Err(err) => return Err(err.to_string()),
+                    Err(_) => return Err("Unable to parse number in matrix".to_owned()),
                 }
             }
 

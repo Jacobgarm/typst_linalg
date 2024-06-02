@@ -1,3 +1,4 @@
+use fraction::Fraction;
 use num::complex::Complex64;
 use std::iter::zip;
 use std::vec;
@@ -65,10 +66,33 @@ impl<T: Scalar> Vector<T> {
         self.entries.len()
     }
 
+    pub fn zero(dim: usize) -> Self {
+        Vector {
+            entries: vec![T::zero(); dim],
+        }
+    }
+
+    pub fn standard_basis(dim: usize, i: usize) -> Self {
+        let mut e = Self::zero(dim);
+        e[i] = T::one();
+        e
+    }
+
     pub fn scale(&self, c: T) -> Vector<T> {
         Vector {
             entries: self.entries.iter().map(|x| *x * c).collect(),
         }
+    }
+
+    pub fn outer_mul(&self, other: &Self) -> Matrix<T> {
+        let self_mat = Matrix {
+            rows: vec![self.entries.clone()],
+        }
+        .transpose();
+        let other_mat = Matrix {
+            rows: vec![other.entries.clone()],
+        };
+        self_mat * other_mat
     }
 }
 
@@ -81,21 +105,18 @@ impl Vector<f64> {
         self.scale(1.0 / self.norm())
     }
 
-    pub fn outer_mul(&self, other: &Self) -> Matrix {
-        let self_mat = Matrix {
-            rows: vec![self.entries.clone()],
-        }
-        .transpose();
-        let other_mat = Matrix {
-            rows: vec![other.entries.clone()],
-        };
-        self_mat * other_mat
-    }
-
     pub fn inner(&self, other: &Self) -> f64 {
         zip(self.entries.iter(), other.entries.iter())
             .map(|(a, b)| a * b)
             .sum::<f64>()
+    }
+}
+
+impl Vector<Fraction> {
+    pub fn inner(&self, other: &Self) -> Fraction {
+        zip(self.entries.iter(), other.entries.iter())
+            .map(|(a, b)| a * b)
+            .sum::<Fraction>()
     }
 }
 

@@ -47,18 +47,20 @@ macro_rules! binary {
     };
 }
 
-unary!(neg, { |m: Matrix| -m });
-unary!(transpose, { |m: Matrix| m.transpose() });
-unary!(REF, { |m: Matrix| m.REF().0 });
-unary!(RREF, { |m: Matrix| m.RREF() });
-unary_err!(det, { |m: Matrix| m.det() });
-unary_err!(trace, { |m: Matrix| m.trace() });
-unary_err!(inverse, { |m: Matrix| m.inverse() });
-unary_err!(exp, { |m: Matrix| m.exp() });
+type RMatrix = Matrix<f64>;
 
-binary!(add, { |m1: Matrix, m2: Matrix| m1 + m2 });
-binary!(sub, { |m1: Matrix, m2: Matrix| m1 - m2 });
-binary!(mul, { |m1: Matrix, m2: Matrix| m1 * m2 });
+unary!(neg, { |m: RMatrix| -m });
+unary!(transpose, { |m: RMatrix| m.transpose() });
+unary!(REF, { |m: RMatrix| m.REF().0 });
+unary!(RREF, { |m: RMatrix| m.RREF() });
+unary_err!(det, { |m: RMatrix| m.det() });
+unary_err!(trace, { |m: RMatrix| m.trace() });
+unary_err!(inverse, { |m: RMatrix| m.inverse() });
+unary_err!(exp, { |m: RMatrix| m.exp() });
+
+binary!(add, { |m1: RMatrix, m2: RMatrix| m1 + m2 });
+binary!(sub, { |m1: RMatrix, m2: RMatrix| m1 - m2 });
+binary!(mul, { |m1: RMatrix, m2: RMatrix| m1 * m2 });
 
 #[wasm_func]
 pub fn pow(mat_bytes: &[u8], pow_bytes: &[u8]) -> Result<Vec<u8>, String> {
@@ -70,7 +72,7 @@ pub fn pow(mat_bytes: &[u8], pow_bytes: &[u8]) -> Result<Vec<u8>, String> {
 
 #[wasm_func]
 pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let mat = Matrix::from_bytes(mat_bytes)?;
+    let mat: RMatrix = Matrix::from_bytes(mat_bytes)?;
     let r1 = usize::from_bytes(r1_bytes)?;
     let r2 = usize::from_bytes(r2_bytes)?;
     let res = mat.rowswap(r1, r2)?;
@@ -79,7 +81,7 @@ pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Result<Vec
 
 #[wasm_func]
 pub fn mul_vec(mat_bytes: &[u8], vec_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let mat = Matrix::from_bytes(mat_bytes)?;
+    let mat: RMatrix = Matrix::from_bytes(mat_bytes)?;
     let vec = Vector::from_bytes(vec_bytes)?;
     let res = mat.mul_vector(vec)?;
     Ok(res.to_bytes())
