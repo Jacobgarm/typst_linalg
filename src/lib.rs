@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
-#![feature(specialization)]
+#![feature(min_specialization)]
 use wasm_minimal_protocol::*;
 
 mod common;
@@ -65,7 +65,7 @@ binary!(mul, { |m1: RMatrix, m2: RMatrix| m1 * m2 });
 
 #[wasm_func]
 pub fn pow(mat_bytes: &[u8], pow_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let mat = Matrix::from_bytes(mat_bytes)?;
+    let mat = RMatrix::from_bytes(mat_bytes)?;
     let pow = i64::from_bytes(pow_bytes)?;
     let res = mat.powi(pow)?;
     Ok(res.to_bytes())

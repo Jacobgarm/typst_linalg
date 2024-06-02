@@ -1,4 +1,7 @@
-use std::{fmt::Display, str::FromStr};
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
 pub fn truncate_zeroes(num_str: String) -> String {
     let mut sep_found = false;
@@ -26,11 +29,18 @@ pub fn factorial(num: i64) -> i64 {
 }
 
 pub trait Scalar:
-    num_traits::NumAssign + Display + Copy + std::ops::Neg<Output = Self> + FromStr + std::iter::Sum
+    num_traits::NumAssign
+    + Debug
+    + Display
+    + Copy
+    + std::ops::Neg<Output = Self>
+    + FromStr
+    + std::iter::Sum
 {
 }
 impl<
         T: num_traits::NumAssign
+            + Debug
             + Display
             + Copy
             + std::ops::Neg<Output = T>

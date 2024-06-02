@@ -324,6 +324,87 @@ impl<T: Scalar> Matrix<T> {
         let trace = self.rows.iter().enumerate().map(|(i, row)| row[i]).sum();
         Ok(trace)
     }
+
+    fn is_invertible(&self) -> bool {
+        self.is_square() && !self.REF().0[self.nrows() - 1][self.ncols() - 1].is_zero()
+    }
+
+    pub fn det(&self) -> Result<T, String> {
+        if !self.is_square() {
+            return Err("Non-square matrix has no determinant".to_owned());
+        }
+        let (mat_ref, swaps) = self.REF();
+        let mut determinant = if swaps % 2 == 0 { T::one() } else { -T::one() };
+        for i in 0..self.ncols() {
+            determinant *= mat_ref[i][i];
+        }
+        Ok(determinant)
+    }
+
+    pub fn RREF(&self) -> Self {
+        let (mut out, _) = self.REF();
+        let rows = self.nrows();
+        let cols = self.ncols();
+        let mut pcol = 0;
+
+        for row in 0..rows {
+            while out[row][pcol].is_zero() {
+                pcol += 1;
+                if pcol >= cols {
+                    return out;
+                }
+            }
+
+            out = out.rowscale(row, T::one() / out[row][pcol]).unwrap();
+            out[row][pcol] = T::one();
+
+            for i in 0..row {
+                out = out.rowadd(i, row, -out[i][pcol]).unwrap();
+                out[i][pcol] = T::zero();
+            }
+        }
+        out
+    }
+
+    pub fn inverse(&self) -> Result<Self, String> {
+        if !self.is_invertible() {
+            return Err("Matrix is not invertible".to_owned());
+        }
+        let augmented = self.augment_cols(&Matrix::id(self.nrows())).unwrap();
+        let reduced = augmented.RREF();
+        let mut inverse_rows = Vec::new();
+        for row in &reduced.rows {
+            inverse_rows.push(row[self.ncols()..].to_vec())
+        }
+        Ok(Matrix { rows: inverse_rows })
+    }
+
+    pub fn powi(&self, power: i64) -> Result<Self, String> {
+        if !self.is_square() {
+            return Err("Cannot take powers of non-square matrix".to_owned());
+        }
+        let mut mult = if power >= 0 {
+            self.clone()
+        } else {
+            self.inverse()?
+        };
+        let mut res = Matrix::id(self.nrows());
+        let abs_power = power.abs();
+        let mut pow2 = 1;
+        loop {
+            if abs_power & pow2 != 0 {
+                res = res * mult.clone();
+            }
+            pow2 <<= 1;
+            if pow2 > abs_power {
+                break;
+            }
+
+            mult = mult.clone() * mult.clone();
+        }
+
+        Ok(res)
+    }
 }
 impl<T: Scalar> REFable for Matrix<T> {
     default fn REF(&self) -> (Self, usize) {
@@ -349,7 +430,6 @@ impl<T: Scalar> REFable for Matrix<T> {
                     continue;
                 }
             }
-
             if prow == rows - 1 {
                 break;
             }
@@ -358,6 +438,10 @@ impl<T: Scalar> REFable for Matrix<T> {
                 out = out
                     .rowadd(i, prow, -out[i][pcol] / out[prow][pcol])
                     .unwrap();
+            }
+            prow += 1;
+            if prow == rows - 1 {
+                break;
             }
         }
         (out, swaps)
@@ -433,87 +517,6 @@ impl Matrix<f64> {
 
     pub fn rotation_z_3d(angle: f64) -> Self {
         Matrix::givens_rotation(3, 1, 0, angle)
-    }
-
-    fn is_invertible(&self) -> bool {
-        self.is_square() && self.REF().0[self.nrows() - 1][self.ncols() - 1] != 0.0
-    }
-
-    pub fn det(&self) -> Result<f64, String> {
-        if !self.is_square() {
-            return Err("Non-square matrix has no determinant".to_owned());
-        }
-        let (mat_ref, swaps) = self.REF();
-        let mut determinant = 1.0;
-        for i in 0..self.ncols() {
-            determinant *= mat_ref[i][i];
-        }
-        Ok((-1.0_f64).powi(swaps as i32) * determinant)
-    }
-
-    pub fn RREF(&self) -> Self {
-        let (mut out, _) = self.REF();
-        let rows = self.nrows();
-        let cols = self.ncols();
-        let mut pcol = 0;
-
-        for row in 0..rows {
-            while out[row][pcol] == 0.0 {
-                pcol += 1;
-                if pcol >= cols {
-                    return out;
-                }
-            }
-
-            out = out.rowscale(row, 1.0 / out[row][pcol]).unwrap();
-            out[row][pcol] = 1.0;
-
-            for i in 0..row {
-                out = out.rowadd(i, row, -out[i][pcol]).unwrap();
-                out[i][pcol] = 0.0;
-            }
-        }
-        out
-    }
-
-    pub fn inverse(&self) -> Result<Self, String> {
-        if !self.is_invertible() {
-            return Err("Matrix is not invertible".to_owned());
-        }
-        let augmented = self.augment_cols(&Matrix::id(self.nrows())).unwrap();
-        let reduced = augmented.RREF();
-        let mut inverse_rows = Vec::new();
-        for row in &reduced.rows {
-            inverse_rows.push(row[self.ncols()..].to_vec())
-        }
-        Ok(Matrix { rows: inverse_rows })
-    }
-
-    pub fn powi(&self, power: i64) -> Result<Self, String> {
-        if !self.is_square() {
-            return Err("Cannot take powers of non-square matrix".to_owned());
-        }
-        let mut mult = if power >= 0 {
-            self.clone()
-        } else {
-            self.inverse()?
-        };
-        let mut res = Matrix::id(self.nrows());
-        let abs_power = power.abs();
-        let mut pow2 = 1;
-        loop {
-            if abs_power & pow2 != 0 {
-                res = res * mult.clone();
-            }
-            pow2 <<= 1;
-            if pow2 > abs_power {
-                break;
-            }
-
-            mult = mult.clone() * mult.clone();
-        }
-
-        Ok(res)
     }
 
     pub fn exp(&self) -> Result<Self, String> {
