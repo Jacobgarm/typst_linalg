@@ -70,4 +70,7 @@ fn main() {
     let mut b = Matrix::filled(2, 2, 0.25_f64);
     b[0][0] = 0.1;
     println!("{}", a.inverse().unwrap());
+    let v1 = Vector::from(vec![1.0; 7]);
+    let v2 = Vector::from(vec![1.0, -1.0, 2.0, 0.2, 0.1, -4.0, 2.0]);
+    println!("{:?}", v1.cross_product(&v2));
 }

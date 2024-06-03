@@ -144,6 +144,35 @@ impl<T: Scalar> Vector<T> {
         let other_mat = other.row_matrix();
         self_mat * other_mat
     }
+
+    pub fn cross_product(&self, rhs: &Self) -> Result<Self, String> {
+        match (self.dim(), rhs.dim()) {
+            (0, 0) => Ok(Vector::zero(0)),
+            (1, 1) => Ok(Vector::zero(1)),
+            (3, 3) => Ok(Vector::from(vec![
+                self[1] * rhs[2] - self[2] * rhs[1],
+                self[2] * rhs[0] - self[0] * rhs[2],
+                self[0] * rhs[1] - self[1] * rhs[0],
+            ])),
+            (7, 7) => Ok(Vector::from({
+                let mut prod = vec![];
+                for i in 0..7 {
+                    prod.push(
+                        self[(i + 1) % 7] * rhs[(i + 3) % 7] - self[(i + 3) % 7] * rhs[(i + 1) % 7]
+                            + self[(i + 2) % 7] * rhs[(i + 6) % 7]
+                            - self[(i + 6) % 7] * rhs[(i + 2) % 7]
+                            + self[(i + 4) % 7] * rhs[(i + 5) % 7]
+                            - self[(i + 5) % 7] * rhs[(i + 4) % 7],
+                    )
+                }
+                prod
+            })),
+            _ => Err(
+                "Cross product is only defined for pairs of 0, 1, 3 or 7 dimensional vectors"
+                    .to_owned(),
+            ),
+        }
+    }
 }
 
 impl Vector<f64> {
