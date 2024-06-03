@@ -37,9 +37,26 @@ impl<T: Scalar> std::fmt::Display for Matrix<T> {
 impl<T: Scalar> std::ops::Add for Matrix<T> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.ncols(), rhs.ncols());
+        assert_eq!(self.nrows(), rhs.nrows());
+        let mut out = self;
+        for i in 0..out.nrows() {
+            for j in 0..out.ncols() {
+                out[i][j] += rhs[i][j];
+            }
+        }
+        out
+    }
+}
+
+impl<T: Scalar> std::ops::Add for &Matrix<T> {
+    type Output = Matrix<T>;
+    fn add(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.ncols(), rhs.ncols());
+        assert_eq!(self.nrows(), rhs.nrows());
         let mut out = self.clone();
-        for i in 0..self.nrows() {
-            for j in 0..self.ncols() {
+        for i in 0..out.nrows() {
+            for j in 0..out.ncols() {
                 out[i][j] += rhs[i][j];
             }
         }
@@ -49,6 +66,19 @@ impl<T: Scalar> std::ops::Add for Matrix<T> {
 
 impl<T: Scalar> std::ops::Neg for Matrix<T> {
     type Output = Self;
+    fn neg(self) -> Self::Output {
+        let mut out = self;
+        for i in 0..out.nrows() {
+            for j in 0..out.ncols() {
+                out[i][j] = -out[i][j];
+            }
+        }
+        out
+    }
+}
+
+impl<T: Scalar> std::ops::Neg for &Matrix<T> {
+    type Output = Matrix<T>;
     fn neg(self) -> Self::Output {
         let mut out = self.clone();
         for i in 0..self.nrows() {
@@ -63,9 +93,22 @@ impl<T: Scalar> std::ops::Neg for Matrix<T> {
 impl<T: Scalar> std::ops::Sub for Matrix<T> {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
+        let mut out = self;
+        for i in 0..out.nrows() {
+            for j in 0..out.ncols() {
+                out[i][j] -= rhs[i][j];
+            }
+        }
+        out
+    }
+}
+
+impl<T: Scalar> std::ops::Sub for &Matrix<T> {
+    type Output = Matrix<T>;
+    fn sub(self, rhs: Self) -> Self::Output {
         let mut out = self.clone();
-        for i in 0..self.nrows() {
-            for j in 0..self.ncols() {
+        for i in 0..out.nrows() {
+            for j in 0..out.ncols() {
                 out[i][j] -= rhs[i][j];
             }
         }
@@ -75,6 +118,22 @@ impl<T: Scalar> std::ops::Sub for Matrix<T> {
 
 impl<T: Scalar> std::ops::Mul for Matrix<T> {
     type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.ncols(), rhs.nrows());
+        let mut out = Matrix::zero(self.nrows(), rhs.ncols());
+        for i in 0..self.nrows() {
+            for j in 0..rhs.ncols() {
+                for k in 0..rhs.nrows() {
+                    out[i][j] += self[i][k] * rhs[k][j];
+                }
+            }
+        }
+        out
+    }
+}
+
+impl<T: Scalar> std::ops::Mul for &Matrix<T> {
+    type Output = Matrix<T>;
     fn mul(self, rhs: Self) -> Self::Output {
         assert_eq!(self.ncols(), rhs.nrows());
         let mut out = Matrix::zero(self.nrows(), rhs.ncols());
@@ -255,7 +314,7 @@ impl<T: Scalar> Matrix<T> {
         Ok(out)
     }
 
-    fn hadamard(&self, rhs: Self) -> Self {
+    fn hadamard(&self, rhs: &Self) -> Self {
         let mut out = self.clone();
         for i in 0..self.nrows() {
             for j in 0..self.ncols() {
