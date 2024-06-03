@@ -208,7 +208,7 @@ impl Vector<Complex64> {
             .sqrt()
     }
 
-    fn normalised(&self) -> Self {
+    pub fn normalised(&self) -> Self {
         self.scale((1.0 / self.norm()).into())
     }
 
@@ -216,6 +216,12 @@ impl Vector<Complex64> {
         zip(self.entries.iter(), other.entries.iter())
             .map(|(a, b)| a * b.conj())
             .sum::<Complex64>()
+    }
+
+    pub fn adjoint_mul(&self, other: &Self) -> Matrix<Complex64> {
+        let self_mat = self.column_matrix();
+        let other_mat = other.column_matrix().adjoint();
+        self_mat * other_mat
     }
 }
 

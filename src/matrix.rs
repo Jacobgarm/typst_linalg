@@ -3,6 +3,7 @@ use core::fmt;
 use crate::common::*;
 use crate::convert::Convertable;
 use crate::vector::Vector;
+use num::{complex::{c64, Complex64, ComplexFloat}, zero};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix<T>
@@ -18,15 +19,28 @@ pub trait Echelon: Sized {
 
 impl<T: Scalar> std::fmt::Display for Matrix<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut longest = vec![0; self.ncols()];
         let mut res = "".to_owned();
         for i in 0..self.nrows() {
             res.push('[');
             for j in 0..self.ncols() {
-                res.push_str(self[i][j].clone().to_string().as_str());
+                if longest[j] == 0 {
+                    longest[j] = self.get_column(j).
+                    entries.
+                    to_owned().
+                    iter().
+                    map(|x| x.to_string().len()).
+                    max().
+                    unwrap();
+                }
+                // println!("{:#?}", self.get_column(j).entries);
+                // println!("Longest at {} is {}", j, longest[j]);
+                let current_str = self[i][j].clone().to_string();
+                res.push_str(&format!("{:^w$}", current_str, w = longest[j]));
                 if j == self.ncols() - 1 {
                     continue;
                 }
-                res.push_str(", ")
+                res.push_str(" ")
             }
             res.push_str("]\n");
         }
@@ -196,7 +210,21 @@ impl<T: Scalar> Matrix<T> {
         out
     }
 
-    fn get_vector(&self, col: usize) -> Vector<T> {
+    pub fn map<F>(&self, f: F) -> Self
+    where F: Fn(T) -> T {
+        let mut out = self.clone();
+        out.rows = out.rows
+        .iter()
+        .map(|row| {
+            row.iter()
+            .map({ |x|
+                f(*x)
+            }).collect()
+        }).collect();
+        out
+    }
+
+    fn get_column(&self, col: usize) -> Vector<T> {
         let rows = self.nrows();
         let mut out = Vector::zero(rows);
         for i in 0..rows {
@@ -597,9 +625,7 @@ impl Matrix<f64> {
 
     pub fn householder_standard(v: Vector<f64>) -> Self {
         let dim = v.dim();
-        let mut e1 = Vector {
-            entries: vec![0.0; dim],
-        };
+        let mut e1 = Vector::zero(dim);
         e1[0] = 1.0;
         let sgn = v[0].signum();
         let u = v.clone() + e1.scale(sgn).scale(v.norm());
@@ -618,8 +644,76 @@ impl Matrix<f64> {
             if i > 0 {
                 m = m.submatrix(0, 0).unwrap();
             }
-            let v = m.get_vector(0);
-            let p = Matrix::householder_standard(v);
+            let v = m.get_column(0);
+            let p = Matrix::<f64>::householder_standard(v);
+
+            // Fix for now, since something happens that shouldn't happen if not. Very slight undershoot (around 15th-16th decimal), but it generally works.
+            if p.ncols() <= 2 && big {
+                break;
+            }
+            // println!("Current p matrix is:\n{}", p);
+            let embedded_p = Matrix::id(dim).embed_matrix(&p.clone(), i, i);
+            p_matrices.push(embedded_p.clone());
+
+            if i == cols - 1 {
+                continue;
+            }
+            m = p * m;
+        }
+        let num_matrices = p_matrices.len();
+        let mut q = p_matrices[0].clone();
+        for i in 1..num_matrices {
+            q = q * p_matrices[i].clone();
+            // println!("Q is at step {}\n{}", i, q);
+        }
+        let mut r = p_matrices[num_matrices - 1].clone();
+        for i in (0..num_matrices - 1).rev() {
+            r = r * p_matrices[i].clone();
+        }
+        r = r * self.clone();
+        Ok((q, r))
+    }
+
+    pub fn eigens(&self) -> Result<(Vec<Vector<f64>>, Vec<Complex64>), String> {
+        if !self.is_square() {
+            return Err("Eigenvalues can only be computed for square matrices!".to_owned());
+        }
+
+
+        todo!();
+
+    }
+}
+
+impl Matrix<Complex64> {
+
+    pub fn adjoint(&self) -> Self {
+        self.clone().map(|x| x.conj()).transpose()
+    }
+
+    pub fn householder_standard(v: Vector<Complex64>) -> Self {
+            let dim = v.dim();
+            let mut e1 = Vector::zero(dim);
+            e1[0] = c64(1.0, 0.0);
+            let sgn = -(v[0].arg() * c64(0.0, 1.0)).exp();
+            let u = v.clone() + e1.scale(sgn).scale(v.norm().into());
+            let n = u.normalised();
+            Matrix::id(dim) - n.adjoint_mul(&n).scale(2.0.into())
+        }
+
+    pub fn QR(&self) -> Result<(Self, Self), String> {
+        let big = self.ncols() >= 8 && self.nrows() >= 8;
+        let cols = self.ncols();
+        let mut m = self.clone();
+        let mut p_matrices: Vec<Matrix<Complex64>> = vec![];
+        let dim = self.nrows();
+
+        for i in 0..cols {
+            if i > 0 {
+                m = m.submatrix(0, 0).unwrap();
+            }
+            let v = m.get_column(0);
+            let p = Matrix::<Complex64>::householder_standard(v);
 
             // Fix for now, since something happens that shouldn't happen if not. Very slight undershoot (around 15th-16th decimal), but it generally works.
             if p.ncols() <= 2 && big {
@@ -648,6 +742,7 @@ impl Matrix<f64> {
         Ok((q, r))
     }
 }
+
 
 impl<T: Scalar> Convertable for Matrix<T> {
     fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
