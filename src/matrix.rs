@@ -210,7 +210,7 @@ impl<T: Scalar> Matrix<T> {
 
     pub fn mul_vector(&self, v: &Vector<T>) -> Result<Vector<T>, String> {
         if v.dim() != self.ncols() {
-            return Err("Vector does nor have same dimension as matrix".to_owned());
+            return Err("Vector does not have same dimension as matrix".to_owned());
         }
         let mut res = Vec::new();
         for i in 0..self.nrows() {
@@ -438,6 +438,7 @@ impl<T: Scalar> REFable for Matrix<T> {
                 out = out
                     .rowadd(i, prow, -out[i][pcol] / out[prow][pcol])
                     .unwrap();
+                out[i][pcol] = T::zero();
             }
             prow += 1;
             if prow == rows - 1 {
