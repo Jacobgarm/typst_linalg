@@ -2,6 +2,7 @@
 #![allow(non_snake_case)]
 #![feature(min_specialization)]
 use fraction::Fraction;
+use fraction::Zero;
 use num::complex::c64;
 
 mod common;
@@ -31,9 +32,11 @@ fn main() {
     };
     let n = Matrix { rows: vec![
         vec![c64(1.0, 2.0), c64(-4.0, 1.0)],
+        vec![c64(0.1, 5.0), c64(3.0, 1.2)],
+        vec![c64(1.0, 2.0), c64(-4.0, 1.0)],
         vec![c64(0.1, 5.0), c64(3.0, 1.2)]
     ] };
-    // println!("{}", I.embed_matrix(&m, 1, 1));
+    println!("{}", I.embed_matrix(&m, 1, 1));
     // let a = m.inverse();
     //let s = m.det();
     // let (Q, R) = m.QR().unwrap();
@@ -50,9 +53,12 @@ fn main() {
     let mut A = Matrix {
         rows: vec![vec![F::from(1), F::from(2)], vec![F::from(3), F::from(4)]],
     };
-    //A[0][0] = Fraction::zero();
+    A[0][0] = Fraction::zero();
     let mut B = Matrix::filled(2, 2, 0.25_f64);
     B[0][0] = 0.1;
-    println!("{}", A.inverse().unwrap());
-    println!("REF is:\n{}", n.REF().0);
+    // println!("{}", A.inverse().unwrap());
+    // println!("REF is:\n{}", n.REF().0);
+    let (Q, R) = n.QR().unwrap();
+    println!("Q is:\n{}\nR is:\n{}", Q, R);
+    println!("{}", Q * R)
 }
