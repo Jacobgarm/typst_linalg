@@ -38,6 +38,7 @@ pub trait Scalar:
     + std::iter::Sum
 {
 }
+
 impl<
         T: num_traits::NumAssign
             + Debug
