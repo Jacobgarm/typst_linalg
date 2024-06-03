@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
 #![feature(min_specialization)]
 use wasm_minimal_protocol::*;
 
@@ -52,8 +51,9 @@ type RMatrix = Matrix<f64>;
 
 unary!(neg, { |m: RMatrix| -m });
 unary!(transpose, { |m: RMatrix| m.transpose() });
-unary!(REF, { |m: RMatrix| m.REF().0 });
-unary!(RREF, { |m: RMatrix| m.RREF() });
+unary!(echelon, { |m: RMatrix| m.echelon().0 });
+unary!(reduced_echelon, { |m: RMatrix| m.reduced_echelon() });
+
 unary_err!(det, { |m: RMatrix| m.det() });
 unary_err!(trace, { |m: RMatrix| m.trace() });
 unary_err!(inverse, { |m: RMatrix| m.inverse() });

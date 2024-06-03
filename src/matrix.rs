@@ -12,8 +12,8 @@ where
     pub rows: Vec<Vec<T>>,
 }
 
-pub trait REFable: Sized {
-    fn REF(&self) -> (Self, usize);
+pub trait Echelon: Sized {
+    fn echelon(&self) -> (Self, usize);
 }
 
 impl<T: Scalar> std::fmt::Display for Matrix<T> {
@@ -325,14 +325,14 @@ impl<T: Scalar> Matrix<T> {
     }
 
     fn is_invertible(&self) -> bool {
-        self.is_square() && !self.REF().0[self.nrows() - 1][self.ncols() - 1].is_zero()
+        self.is_square() && !self.echelon().0[self.nrows() - 1][self.ncols() - 1].is_zero()
     }
 
     pub fn det(&self) -> Result<T, String> {
         if !self.is_square() {
             return Err("Non-square matrix has no determinant".to_owned());
         }
-        let (mat_ref, swaps) = self.REF();
+        let (mat_ref, swaps) = self.echelon();
         let mut determinant = if swaps % 2 == 0 { T::one() } else { -T::one() };
         for i in 0..self.ncols() {
             determinant *= mat_ref[i][i];
@@ -340,8 +340,8 @@ impl<T: Scalar> Matrix<T> {
         Ok(determinant)
     }
 
-    pub fn RREF(&self) -> Self {
-        let (mut out, _) = self.REF();
+    pub fn reduced_echelon(&self) -> Self {
+        let (mut out, _) = self.echelon();
         let rows = self.nrows();
         let cols = self.ncols();
         let mut pcol = 0;
@@ -370,7 +370,7 @@ impl<T: Scalar> Matrix<T> {
             return Err("Matrix is not invertible".to_owned());
         }
         let augmented = self.augment_cols(&Matrix::id(self.nrows())).unwrap();
-        let reduced = augmented.RREF();
+        let reduced = augmented.reduced_echelon();
         let mut inverse_rows = Vec::new();
         for row in &reduced.rows {
             inverse_rows.push(row[self.ncols()..].to_vec())
@@ -406,8 +406,8 @@ impl<T: Scalar> Matrix<T> {
     }
 }
 
-impl<T: Scalar> REFable for Matrix<T> {
-    default fn REF(&self) -> (Self, usize) {
+impl<T: Scalar> Echelon for Matrix<T> {
+    default fn echelon(&self) -> (Self, usize) {
         let mut out = self.clone();
         let rows = self.nrows();
         let cols = self.ncols();
@@ -449,8 +449,8 @@ impl<T: Scalar> REFable for Matrix<T> {
     }
 }
 
-impl REFable for Matrix<f64> {
-    fn REF(&self) -> (Self, usize) {
+impl Echelon for Matrix<f64> {
+    fn echelon(&self) -> (Self, usize) {
         let mut out = self.clone();
         let rows = self.nrows();
         let cols = self.ncols();
@@ -548,7 +548,7 @@ impl Matrix<f64> {
         Matrix::id(dim) - n.outer_mul(&n).scale(2.0)
     }
 
-    pub fn QR(&self) -> Result<(Self, Self), String> {
+    pub fn qr_decomposition(&self) -> Result<(Self, Self), String> {
         let cols = self.ncols();
         let mut m = self.clone();
         let mut p_matrices: Vec<Matrix<f64>> = vec![];
