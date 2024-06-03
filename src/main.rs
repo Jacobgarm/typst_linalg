@@ -9,7 +9,6 @@ mod matrix;
 mod vector;
 
 use matrix::*;
-use num::Zero;
 use vector::*;
 type F = Fraction;
 

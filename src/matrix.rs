@@ -249,9 +249,8 @@ impl<T: Scalar> Matrix<T> {
             return Err("Cannot add a row to itself".to_owned());
         }
         let mut out = self.clone();
-        let addend = out[r2].clone();
-        for i in 0..self.ncols() {
-            out[r1][i] += c * addend[i];
+        for (i, entry) in self[r2].iter().enumerate() {
+            out[r1][i] += c * *entry;
         }
         Ok(out)
     }
