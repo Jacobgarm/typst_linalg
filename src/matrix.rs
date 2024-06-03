@@ -549,6 +549,7 @@ impl Matrix<f64> {
     }
 
     pub fn qr_decomposition(&self) -> Result<(Self, Self), String> {
+        let big = self.ncols() >= 8 && self.nrows() >= 8;
         let cols = self.ncols();
         let mut m = self.clone();
         let mut p_matrices: Vec<Matrix<f64>> = vec![];
@@ -559,13 +560,13 @@ impl Matrix<f64> {
                 m = m.submatrix(0, 0).unwrap();
             }
             let v = m.get_vector(0);
-            // let v_clone = v.clone();
             let p = Matrix::householder_standard(v);
-            // Fix for now, since something happens that shouldn't happen if not. Slight undershoot, but it generally works.
-            if p.ncols() <= 2 {
+
+            // Fix for now, since something happens that shouldn't happen if not. Very slight undershoot (around 15th-16th decimal), but it generally works.
+            if p.ncols() <= 2 && big {
                 break;
             }
-            println!("Current p matrix is:\n{}", p);
+            // println!("Current p matrix is:\n{}", p);
             let embedded_p = Matrix::id(dim).embed_matrix(&p.clone(), i, i);
             p_matrices.push(embedded_p.clone());
 

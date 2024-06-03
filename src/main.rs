@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![feature(min_specialization)]
 use fraction::Fraction;
+use num::complex::c64;
 
 mod common;
 mod convert;
@@ -8,6 +9,7 @@ mod matrix;
 mod vector;
 
 use matrix::*;
+use num::Complex;
 use vector::*;
 type F = Fraction;
 
@@ -40,6 +42,12 @@ fn main() {
     let a = Matrix::filled(12, 14, 1.0);
     let v = Vector {
         entries: vec![2.0; 4],
+    };
+    let n = Matrix {
+        rows: vec![
+            vec![c64(1.0, 2.0), c64(-4.0, 1.0)],
+            vec![c64(0.1, 5.0), c64(3.0, 1.2)],
+        ],
     };
     // println!("{}", I.embed_matrix(&m, 1, 1));
     // let a = m.inverse();
