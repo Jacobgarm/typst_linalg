@@ -52,33 +52,4 @@ fn main() {
             vec![c64(0.1, 5.0), c64(3.0, 1.2)],
         ],
     };
-    println!("{}", I.embed_matrix(&m, 1, 1));
-    // let a = m.inverse();
-    //let s = m.det();
-    let (q, r) = m1.qr_decomposition().unwrap();
-    println!("Q:\n{},\nR:\n{}", q, r);
-    println!("Product is:\n{}", q * r);
-    println!("Rotation:\n{}", Matrix::rotation_y_3d(2.0));
-    let fv1 = Vector {
-        entries: vec![Fraction::new(1u64, 2u64); 3],
-    };
-    let fv2 = Vector {
-        entries: vec![Fraction::new(3u64, 4u64); 3],
-    };
-    println!("Inner {}", fv1.inner(&fv2));
-    let mut a = Matrix {
-        rows: vec![vec![F::from(1), F::from(2)], vec![F::from(3), F::from(4)]],
-    };
-    A[0][0] = Fraction::zero();
-    let mut B = Matrix::filled(2, 2, 0.25_f64);
-    B[0][0] = 0.1;
-    // println!("{}", A.inverse().unwrap());
-    // println!("REF is:\n{}", n.REF().0);
-    let (Q, R) = n.QR().unwrap();
-    println!("Q is:\n{}\nR is:\n{}", Q, R);
-    println!("{}", Q * R)
-    //A[0][0] = Fraction::zero();
-    let mut b = Matrix::filled(2, 2, 0.25_f64);
-    b[0][0] = 0.1;
-    println!("{}", a.inverse().unwrap());
 }
