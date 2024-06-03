@@ -405,6 +405,7 @@ impl<T: Scalar> Matrix<T> {
         Ok(res)
     }
 }
+
 impl<T: Scalar> REFable for Matrix<T> {
     default fn REF(&self) -> (Self, usize) {
         let mut out = self.clone();

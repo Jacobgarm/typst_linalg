@@ -17,8 +17,21 @@ where
 impl<T: Scalar> std::ops::Add for Vector<T> {
     type Output = Self;
     fn add(self, rhs: Vector<T>) -> Self::Output {
+        assert_eq!(self.dim(), rhs.dim());
+        let mut out = self;
+        for i in 0..out.dim() {
+            out[i] += rhs[i];
+        }
+        out
+    }
+}
+
+impl<T: Scalar> std::ops::Add for &Vector<T> {
+    type Output = Vector<T>;
+    fn add(self, rhs: &Vector<T>) -> Self::Output {
+        assert_eq!(self.dim(), rhs.dim());
         let mut out = self.clone();
-        for i in 0..self.dim() {
+        for i in 0..out.dim() {
             out[i] += rhs[i];
         }
         out
@@ -28,8 +41,21 @@ impl<T: Scalar> std::ops::Add for Vector<T> {
 impl<T: Scalar> std::ops::Sub for Vector<T> {
     type Output = Self;
     fn sub(self, rhs: Vector<T>) -> Self::Output {
+        assert_eq!(self.dim(), rhs.dim());
+        let mut out = self;
+        for i in 0..out.dim() {
+            out[i] -= rhs[i];
+        }
+        out
+    }
+}
+
+impl<T: Scalar> std::ops::Sub for &Vector<T> {
+    type Output = Vector<T>;
+    fn sub(self, rhs: &Vector<T>) -> Self::Output {
+        assert_eq!(self.dim(), rhs.dim());
         let mut out = self.clone();
-        for i in 0..self.dim() {
+        for i in 0..out.dim() {
             out[i] -= rhs[i];
         }
         out
@@ -39,8 +65,19 @@ impl<T: Scalar> std::ops::Sub for Vector<T> {
 impl<T: Scalar> std::ops::Neg for Vector<T> {
     type Output = Self;
     fn neg(self) -> Self::Output {
+        let mut out = self;
+        for i in 0..out.dim() {
+            out[i] = -out[i];
+        }
+        out
+    }
+}
+
+impl<T: Scalar> std::ops::Neg for &Vector<T> {
+    type Output = Vector<T>;
+    fn neg(self) -> Self::Output {
         let mut out = self.clone();
-        for i in 0..self.dim() {
+        for i in 0..out.dim() {
             out[i] = -out[i];
         }
         out
@@ -61,15 +98,19 @@ impl<T: Scalar> std::ops::IndexMut<usize> for Vector<T> {
     }
 }
 
+impl<T: Scalar> From<Vec<T>> for Vector<T> {
+    fn from(v: Vec<T>) -> Self {
+        Vector { entries: v }
+    }
+}
+
 impl<T: Scalar> Vector<T> {
     pub fn dim(&self) -> usize {
         self.entries.len()
     }
 
     pub fn zero(dim: usize) -> Self {
-        Vector {
-            entries: vec![T::zero(); dim],
-        }
+        Vector::from(vec![T::zero(); dim])
     }
 
     pub fn standard_basis(dim: usize, i: usize) -> Self {
@@ -79,19 +120,22 @@ impl<T: Scalar> Vector<T> {
     }
 
     pub fn scale(&self, c: T) -> Vector<T> {
-        Vector {
-            entries: self.entries.iter().map(|x| *x * c).collect(),
+        Vector::from(self.entries.iter().map(|x| *x * c).collect::<Vec<T>>())
+    }
+
+    pub fn row_matrix(&self) -> Matrix<T> {
+        Matrix {
+            rows: vec![self.entries.clone()],
         }
     }
 
+    pub fn column_matrix(&self) -> Matrix<T> {
+        self.row_matrix().transpose()
+    }
+
     pub fn outer_mul(&self, other: &Self) -> Matrix<T> {
-        let self_mat = Matrix {
-            rows: vec![self.entries.clone()],
-        }
-        .transpose();
-        let other_mat = Matrix {
-            rows: vec![other.entries.clone()],
-        };
+        let self_mat = self.column_matrix();
+        let other_mat = other.row_matrix();
         self_mat * other_mat
     }
 }
@@ -127,6 +171,10 @@ impl Vector<Complex64> {
             .map(|x| (x * x.conj()).re)
             .sum::<f64>()
             .sqrt()
+    }
+
+    fn normalised(&self) -> Self {
+        self.scale((1.0 / self.norm()).into())
     }
 
     pub fn inner(&self, other: &Self) -> Complex64 {
