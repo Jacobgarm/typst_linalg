@@ -99,8 +99,14 @@ impl<T: Scalar> std::ops::IndexMut<usize> for Vector<T> {
 }
 
 impl<T: Scalar> From<Vec<T>> for Vector<T> {
-    fn from(v: Vec<T>) -> Self {
-        Vector { entries: v }
+    fn from(value: Vec<T>) -> Self {
+        Vector { entries: value }
+    }
+}
+
+impl<T: Scalar> From<Vector<T>> for Vec<T> {
+    fn from(value: Vector<T>) -> Self {
+        value.entries
     }
 }
 

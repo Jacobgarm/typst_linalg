@@ -208,7 +208,7 @@ impl<T: Scalar> Matrix<T> {
         true
     }
 
-    pub fn mul_vector(&self, v: Vector<T>) -> Result<Vector<T>, String> {
+    pub fn mul_vector(&self, v: &Vector<T>) -> Result<Vector<T>, String> {
         if v.dim() != self.ncols() {
             return Err("Vector does nor have same dimension as matrix".to_owned());
         }
@@ -491,6 +491,22 @@ impl REFable for Matrix<f64> {
         (out, swaps)
     }
 }
+
+impl<T: Scalar + From<f64>> Matrix<T> {
+    pub fn exp(&self) -> Result<Self, String> {
+        if !self.is_square() {
+            return Err("Cannot exponentiate non-square matrix".to_owned());
+        }
+        let mut res = Matrix::id(self.nrows());
+        let mut mult = self.clone();
+        for k in 1..21 {
+            res = res + mult.clone().scale((1.0 / factorial(k) as f64).into());
+            mult = mult * self.clone();
+        }
+        Ok(res)
+    }
+}
+
 impl Matrix<f64> {
     fn givens_rotation(dim: usize, i: usize, j: usize, angle: f64) -> Self {
         let mut out = Matrix::id(dim);
@@ -517,19 +533,6 @@ impl Matrix<f64> {
 
     pub fn rotation_z_3d(angle: f64) -> Self {
         Matrix::givens_rotation(3, 1, 0, angle)
-    }
-
-    pub fn exp(&self) -> Result<Self, String> {
-        if !self.is_square() {
-            return Err("Cannot exponentiate non-square matrix".to_owned());
-        }
-        let mut res = Matrix::id(self.nrows());
-        let mut mult = self.clone();
-        for k in 1..21 {
-            res = res + mult.clone().scale(1.0 / factorial(k) as f64);
-            mult = mult * self.clone();
-        }
-        Ok(res)
     }
 
     pub fn householder_standard(v: Vector<f64>) -> Self {

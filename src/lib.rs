@@ -84,6 +84,6 @@ pub fn rowswap(mat_bytes: &[u8], r1_bytes: &[u8], r2_bytes: &[u8]) -> Result<Vec
 pub fn mul_vec(mat_bytes: &[u8], vec_bytes: &[u8]) -> Result<Vec<u8>, String> {
     let mat: RMatrix = Matrix::from_bytes(mat_bytes)?;
     let vec = Vector::from_bytes(vec_bytes)?;
-    let res = mat.mul_vector(vec)?;
+    let res = mat.mul_vector(&vec)?;
     Ok(res.to_bytes())
 }
