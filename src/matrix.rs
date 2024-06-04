@@ -3,7 +3,7 @@ use core::fmt;
 use crate::common::*;
 use crate::convert::Convertable;
 use crate::vector::Vector;
-use num::{complex::{c64, Complex64, ComplexFloat}, zero};
+use num::complex::{c64, Complex64};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix<T>
@@ -25,13 +25,14 @@ impl<T: Scalar> std::fmt::Display for Matrix<T> {
             res.push('[');
             for j in 0..self.ncols() {
                 if longest[j] == 0 {
-                    longest[j] = self.get_column(j).
-                    entries.
-                    to_owned().
-                    iter().
-                    map(|x| x.to_string().len()).
-                    max().
-                    unwrap();
+                    longest[j] = self
+                        .get_column(j)
+                        .entries
+                        .to_owned()
+                        .iter()
+                        .map(|x| x.to_string().len())
+                        .max()
+                        .unwrap();
                 }
                 // println!("{:#?}", self.get_column(j).entries);
                 // println!("Longest at {} is {}", j, longest[j]);
@@ -210,18 +211,32 @@ impl<T: Scalar> Matrix<T> {
         out
     }
 
-    pub fn map<F>(&self, f: F) -> Self
-    where F: Fn(T) -> T {
-        let mut out = self.clone();
-        out.rows = out.rows
-        .iter()
-        .map(|row| {
-            row.iter()
-            .map({ |x|
-                f(*x)
-            }).collect()
-        }).collect();
-        out
+    pub fn vandermonde(bases: &[T], power: usize) -> Self {
+        let mut rows = vec![];
+        for base in bases {
+            let mut entry = T::one();
+            let mut row = vec![entry];
+            for _ in 0..power {
+                entry *= *base;
+                row.push(entry);
+            }
+
+            rows.push(row);
+        }
+        Matrix { rows }
+    }
+
+    pub fn map<F, U>(&self, f: F) -> Matrix<U>
+    where
+        F: Fn(T) -> U,
+        U: Scalar,
+    {
+        let mapped_rows = self
+            .rows
+            .iter()
+            .map(|row| row.iter().map(|x| f(*x)).collect())
+            .collect();
+        Matrix { rows: mapped_rows }
     }
 
     fn get_column(&self, col: usize) -> Vector<T> {
@@ -258,8 +273,8 @@ impl<T: Scalar> Matrix<T> {
             return false;
         };
         for i in 0..self.nrows() {
-            for j in 0..self.ncols() {
-                if i != j && self[i][j] != self[j][i] {
+            for j in i + 1..self.ncols() {
+                if self[i][j] != self[j][i] {
                     return false;
                 }
             }
@@ -272,7 +287,7 @@ impl<T: Scalar> Matrix<T> {
             return false;
         };
         for i in 0..self.nrows() {
-            for j in 0..self.ncols() {
+            for j in i..self.ncols() {
                 if self[i][j] != -self[j][i] {
                     return false;
                 }
@@ -293,6 +308,26 @@ impl<T: Scalar> Matrix<T> {
             }
         }
         true
+    }
+
+    pub fn is_lower_triangular(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        }
+        self.rows
+            .iter()
+            .enumerate()
+            .all(|(i, row)| row.iter().skip(i + 1).all(|x| x.is_zero()))
+    }
+
+    pub fn is_upper_triangular(&self) -> bool {
+        if !self.is_square() {
+            return false;
+        }
+        self.rows
+            .iter()
+            .enumerate()
+            .all(|(i, row)| row.iter().take(i).all(|x| x.is_zero()))
     }
 
     pub fn mul_vector(&self, v: &Vector<T>) -> Result<Vector<T>, String> {
@@ -679,27 +714,24 @@ impl Matrix<f64> {
             return Err("Eigenvalues can only be computed for square matrices!".to_owned());
         }
 
-
         todo!();
-
     }
 }
 
 impl Matrix<Complex64> {
-
     pub fn adjoint(&self) -> Self {
         self.clone().map(|x| x.conj()).transpose()
     }
 
     pub fn householder_standard(v: Vector<Complex64>) -> Self {
-            let dim = v.dim();
-            let mut e1 = Vector::zero(dim);
-            e1[0] = c64(1.0, 0.0);
-            let sgn = -(v[0].arg() * c64(0.0, 1.0)).exp();
-            let u = v.clone() + e1.scale(sgn).scale(v.norm().into());
-            let n = u.normalised();
-            Matrix::id(dim) - n.adjoint_mul(&n).scale(2.0.into())
-        }
+        let dim = v.dim();
+        let mut e1 = Vector::zero(dim);
+        e1[0] = c64(1.0, 0.0);
+        let sgn = -(v[0].arg() * c64(0.0, 1.0)).exp();
+        let u = v.clone() + e1.scale(sgn).scale(v.norm().into());
+        let n = u.normalised();
+        Matrix::id(dim) - n.adjoint_mul(&n).scale(2.0.into())
+    }
 
     pub fn QR(&self) -> Result<(Self, Self), String> {
         let big = self.ncols() >= 8 && self.nrows() >= 8;
@@ -742,7 +774,6 @@ impl Matrix<Complex64> {
         Ok((q, r))
     }
 }
-
 
 impl<T: Scalar> Convertable for Matrix<T> {
     fn from_bytes(bytes: &[u8]) -> Result<Self, String> {

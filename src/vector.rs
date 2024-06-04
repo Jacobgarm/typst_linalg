@@ -1,4 +1,3 @@
-use fraction::Fraction;
 use num::complex::Complex64;
 use std::iter::zip;
 use std::vec;
@@ -125,6 +124,10 @@ impl<T: Scalar> Vector<T> {
         e
     }
 
+    fn is_zero(&self) -> bool {
+        self.entries.iter().all(|x| x.is_zero())
+    }
+
     pub fn scale(&self, c: T) -> Vector<T> {
         Vector::from(self.entries.iter().map(|x| *x * c).collect::<Vec<T>>())
     }
@@ -173,6 +176,22 @@ impl<T: Scalar> Vector<T> {
             ),
         }
     }
+
+    pub fn is_ortogonal_to(&self, other: &Self) -> bool {
+        self.inner(other).is_zero()
+    }
+}
+
+pub trait InnerProduct<T: Scalar> {
+    fn inner(&self, rhs: &Self) -> T;
+}
+
+impl<T: Scalar> InnerProduct<T> for Vector<T> {
+    default fn inner(&self, other: &Self) -> T {
+        zip(self.entries.iter(), other.entries.iter())
+            .map(|(a, b)| *a * *b)
+            .sum::<T>()
+    }
 }
 
 impl Vector<f64> {
@@ -184,18 +203,11 @@ impl Vector<f64> {
         self.scale(1.0 / self.norm())
     }
 
-    pub fn inner(&self, other: &Self) -> f64 {
-        zip(self.entries.iter(), other.entries.iter())
-            .map(|(a, b)| a * b)
-            .sum::<f64>()
-    }
-}
-
-impl Vector<Fraction> {
-    pub fn inner(&self, other: &Self) -> Fraction {
-        zip(self.entries.iter(), other.entries.iter())
-            .map(|(a, b)| a * b)
-            .sum::<Fraction>()
+    pub fn angle_with(&self, other: &Self) -> Result<f64, String> {
+        if self.is_zero() || other.is_zero() {
+            return Err("Angles are not defined for the zero vector".to_owned());
+        }
+        Ok((self.inner(other) / self.norm() / other.norm()).acos())
     }
 }
 
