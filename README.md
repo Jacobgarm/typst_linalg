@@ -1,2 +1,5 @@
 # Numerical linear algebra for Typst
-Project structure is based on https://github.com/astrale-sharp/wasm-minimal-protocol. Currently does not support matrices with complex entries.
+
+Matrix and vector functions are written in pure Rust. Supports matrices with real, complex and rational entries.
+
+Uses [wasm-minimal-protocol](https://github.com/astrale-sharp/wasm-minimal-protocol) for interfacing with Typst's plugin feature.
