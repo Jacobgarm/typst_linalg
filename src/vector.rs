@@ -1,4 +1,3 @@
-use fraction::Fraction;
 use num::complex::Complex64;
 use std::iter::zip;
 use std::vec;
@@ -125,6 +124,10 @@ impl<T: Scalar> Vector<T> {
         e
     }
 
+    fn is_zero(&self) -> bool {
+        self.entries.iter().all(|x| x.is_zero())
+    }
+
     pub fn scale(&self, c: T) -> Vector<T> {
         Vector::from(self.entries.iter().map(|x| *x * c).collect::<Vec<T>>())
     }
@@ -144,6 +147,51 @@ impl<T: Scalar> Vector<T> {
         let other_mat = other.row_matrix();
         self_mat * other_mat
     }
+
+    pub fn cross_product(&self, rhs: &Self) -> Result<Self, String> {
+        match (self.dim(), rhs.dim()) {
+            (0, 0) => Ok(Vector::zero(0)),
+            (1, 1) => Ok(Vector::zero(1)),
+            (3, 3) => Ok(Vector::from(vec![
+                self[1] * rhs[2] - self[2] * rhs[1],
+                self[2] * rhs[0] - self[0] * rhs[2],
+                self[0] * rhs[1] - self[1] * rhs[0],
+            ])),
+            (7, 7) => Ok(Vector::from({
+                let mut prod = vec![];
+                for i in 0..7 {
+                    prod.push(
+                        self[(i + 1) % 7] * rhs[(i + 3) % 7] - self[(i + 3) % 7] * rhs[(i + 1) % 7]
+                            + self[(i + 2) % 7] * rhs[(i + 6) % 7]
+                            - self[(i + 6) % 7] * rhs[(i + 2) % 7]
+                            + self[(i + 4) % 7] * rhs[(i + 5) % 7]
+                            - self[(i + 5) % 7] * rhs[(i + 4) % 7],
+                    )
+                }
+                prod
+            })),
+            _ => Err(
+                "Cross product is only defined for pairs of 0, 1, 3 or 7 dimensional vectors"
+                    .to_owned(),
+            ),
+        }
+    }
+
+    pub fn is_ortogonal_to(&self, other: &Self) -> bool {
+        self.inner(other).is_zero()
+    }
+}
+
+pub trait InnerProduct<T: Scalar> {
+    fn inner(&self, rhs: &Self) -> T;
+}
+
+impl<T: Scalar> InnerProduct<T> for Vector<T> {
+    default fn inner(&self, other: &Self) -> T {
+        zip(self.entries.iter(), other.entries.iter())
+            .map(|(a, b)| *a * *b)
+            .sum::<T>()
+    }
 }
 
 impl Vector<f64> {
@@ -155,18 +203,11 @@ impl Vector<f64> {
         self.scale(1.0 / self.norm())
     }
 
-    pub fn inner(&self, other: &Self) -> f64 {
-        zip(self.entries.iter(), other.entries.iter())
-            .map(|(a, b)| a * b)
-            .sum::<f64>()
-    }
-}
-
-impl Vector<Fraction> {
-    pub fn inner(&self, other: &Self) -> Fraction {
-        zip(self.entries.iter(), other.entries.iter())
-            .map(|(a, b)| a * b)
-            .sum::<Fraction>()
+    pub fn angle_with(&self, other: &Self) -> Result<f64, String> {
+        if self.is_zero() || other.is_zero() {
+            return Err("Angles are not defined for the zero vector".to_owned());
+        }
+        Ok((self.inner(other) / self.norm() / other.norm()).acos())
     }
 }
 
