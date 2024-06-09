@@ -3,7 +3,7 @@ use core::fmt;
 use crate::common::*;
 use crate::convert::Convertable;
 use crate::vector::Vector;
-use num::{complex::{c64, Complex64, ComplexFloat}, zero};
+use num::complex::{c64, Complex64, ComplexFloat};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix<T>
@@ -701,7 +701,7 @@ impl Matrix<Complex64> {
             Matrix::id(dim) - n.adjoint_mul(&n).scale(2.0.into())
         }
 
-    pub fn QR(&self) -> Result<(Self, Self), String> {
+    pub fn qr_decomposition(&self) -> Result<(Self, Self), String> {
         let big = self.ncols() >= 8 && self.nrows() >= 8;
         let cols = self.ncols();
         let mut m = self.clone();
@@ -719,7 +719,6 @@ impl Matrix<Complex64> {
             if p.ncols() <= 2 && big {
                 break;
             }
-            // println!("Current p matrix is:\n{}", p);
             let embedded_p = Matrix::id(dim).embed_matrix(&p.clone(), i, i);
             p_matrices.push(embedded_p.clone());
 

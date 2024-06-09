@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![feature(min_specialization)]
 use fraction::Fraction;
-use fraction::Zero;
 use num::complex::c64;
 
 mod common;
@@ -10,7 +9,6 @@ mod matrix;
 mod vector;
 
 use matrix::*;
-use num::Complex;
 use vector::*;
 type F = Fraction;
 
